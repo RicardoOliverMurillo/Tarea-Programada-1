@@ -2,7 +2,8 @@
 #include <stdlib.h>
 
 
-
+/*Anjelica es una intensa
+ y necia */
 
 typedef struct doctor{
     char name[10];
