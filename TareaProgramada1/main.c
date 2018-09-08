@@ -43,6 +43,43 @@ void imprimirMenu(){
     }
 }
 
+/*ESTRUCTURAS*/
+
+typedef struct doctor{
+    int id_medico;
+    char* nombre;
+    char* primer_apellido;
+    char* especialidad;
+    char* turno;
+} Doctor;
+
+typedef struct paciente{
+    int id_paciente;
+    char* nombre;
+    char* primer_apellido;
+    int edad; /*edad debe ser en años*/
+    char* telefono; /*formato debe ser ####-####*/
+} Paciente;
+
+typedef struct tiempo{
+    int hora;
+    int minutos;
+    /*deben ser solo de las 08.00 a 19.00*/
+}Tiempo;
+
+typedef struct fecha{
+    int dia;
+    int mes;
+    int año;
+    /*formato debe ser dd-mm-aaaa*/
+}Fecha;
+
+typedef struct cita{
+    int id_medico;
+    int id_paciente;
+    Tiempo horaCita;
+    Fecha fechaCita;
+}Cita;
 
 int main(int argc, char** argv) {
     imprimirMenu();
