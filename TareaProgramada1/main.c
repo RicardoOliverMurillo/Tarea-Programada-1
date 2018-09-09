@@ -25,7 +25,7 @@ void imprimirMenu(){
                 printf("###");
                 break;
             case 2:
-                printf("###");
+                agregarDoctor();
                 break;
             case 3:
                 printf("###");
@@ -47,10 +47,10 @@ void imprimirMenu(){
 
 typedef struct doctor{
     int id_medico;
-    char* nombre;
-    char* primer_apellido;
-    char* especialidad;
-    char* turno;
+    char nombre[100];
+    char primer_apellido[100];
+    char especialidad[100];
+    char turno[10];
 } Doctor;
 
 typedef struct paciente{
@@ -81,7 +81,40 @@ typedef struct cita{
     Fecha fechaCita;
 }Cita;
 
-/*hola*/
+void agregarDoctor(){
+    char nombreDoctor[100];
+    char primerApellido[100];
+    char especialidadDoctor[100];
+    char turno[10];
+    int id_doctor;
+    
+    Doctor* nuevoDoctor = (Doctor*)malloc(sizeof(Doctor));
+    
+    printf("Inserte el nombre del doctor: ");
+    scanf("%s", &nombreDoctor);
+    printf("Inserte el primer apellido del doctor: ");
+    scanf("%s", &primerApellido);
+    printf("Inserte la especialidad del doctor: ");
+    scanf("%s", &especialidadDoctor);
+    printf("Inserte el turno del doctor: ");
+    scanf("%s", &turno);
+    printf("Inserte el id del doctor: ");
+    scanf("%d", &id_doctor);
+    
+    strcpy(nuevoDoctor->nombre, nombreDoctor);
+    strcpy(nuevoDoctor->primer_apellido, primerApellido);
+    strcpy(nuevoDoctor->especialidad, especialidadDoctor);
+    strcpy(nuevoDoctor->turno, turno);
+    nuevoDoctor->id_medico = id_doctor;
+    
+    FILE * miarchivo;
+    char* nombrearchivo = "doctores.txt";
+    
+    miarchivo=fopen(nombrearchivo,"a");
+    fprintf(miarchivo, "%s, %s, %s, %s, %d\n" , 
+            nuevoDoctor->nombre, nuevoDoctor->primer_apellido, nuevoDoctor->especialidad, nuevoDoctor->turno, nuevoDoctor->id_medico);
+    fclose(miarchivo);
+}
 struct cita* nuevaCita;
 
 int main(int argc, char** argv) {
