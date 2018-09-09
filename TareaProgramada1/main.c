@@ -70,7 +70,7 @@ typedef struct tiempo{
 typedef struct fecha{
     int dia;
     int mes;
-    int año;
+    int anio;
     /*formato debe ser dd-mm-aaaa*/
 }Fecha;
 
@@ -79,7 +79,7 @@ typedef struct cita{
     int id_paciente;
     Tiempo horaCita;
     Fecha fechaCita;
-}Cita
+}Cita;
 
 
 int main(int argc, char** argv) {
