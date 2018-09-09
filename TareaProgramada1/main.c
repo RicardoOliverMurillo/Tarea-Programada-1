@@ -81,6 +81,8 @@ typedef struct cita{
     Fecha fechaCita;
 }Cita;
 
+/*hola*/
+struct cita* nuevaCita;
 
 int main(int argc, char** argv) {
     imprimirMenu();
