@@ -79,7 +79,8 @@ typedef struct cita{
     int id_paciente;
     Tiempo horaCita;
     Fecha fechaCita;
-}Cita;
+}Cita
+
 
 int main(int argc, char** argv) {
     imprimirMenu();
