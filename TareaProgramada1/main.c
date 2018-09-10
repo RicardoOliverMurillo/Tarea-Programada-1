@@ -111,10 +111,45 @@ void agregarDoctor(){
     char* nombrearchivo = "doctores.txt";
     
     miarchivo=fopen(nombrearchivo,"a");
-    fprintf(miarchivo, "%s, %s, %s, %s, %d\n" , 
+    fprintf(miarchivo, "%s, %s, %s, %s, %d \r\n", 
             nuevoDoctor->nombre, nuevoDoctor->primer_apellido, nuevoDoctor->especialidad, nuevoDoctor->turno, nuevoDoctor->id_medico);
     fclose(miarchivo);
 }
+
+void agrgarPaciente(){
+    char* nombrePaciente;
+    char* apellidoPaciente;
+    char* telefono;
+    int edad; 
+    int id_paciente;
+    Paciente* nuevoPaciente = (Paciente*)malloc(sizeof(Paciente));
+    
+    printf("Ingrese el nombre del paciente: ");
+    scanf("%s", &nombrePaciente);
+    printf("Ingrese el apellido del paciente: ");
+    scanf("%s", &apellidoPaciente);
+    printf("Ingrese el teléfono del paciente: ");
+    scanf("%s", &telefono);
+    printf("Ingrese la edad en años del paciente: ");
+    scanf("%s", &edad);
+    printf("Ingrese el id del paciente: ");
+    scanf("%s", &id_paciente);
+    
+    strcpy(nuevoPaciente->nombre, nombrePaciente);
+    strcpy(nuevoPaciente->primer_apellido, apellidoPaciente);
+    strcpy(nuevoPaciente->telefono, telefono);
+    nuevoPaciente->edad = edad;
+    nuevoPaciente->id_paciente = id_paciente;
+    
+    FILE miarchivo;
+    char* nombrearchivo = "pacientes.txt";
+    
+    miarchivo = fopen(nombrearchivo, "a"); //agrega al final de la lista
+    fprintf(miarchivo, "%s,%s,%s,%d,%d\r\n", 
+            nuevoPaciente->nombre,nuevoPaciente->primer_apellido, nuevoPaciente->telefono, nuevoPaciente->edad, nuevoPaciente->id_paciente);
+    fclose(miarchivo);
+}
+
 struct cita* nuevaCita;
 
 int main(int argc, char** argv) {
