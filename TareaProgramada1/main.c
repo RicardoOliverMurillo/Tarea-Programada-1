@@ -116,6 +116,9 @@ void agregarDoctor(){
     fclose(miarchivo);
 }
 
+/*Función que se encarga de escribir en un txt los pacientes que se registran*/
+/*Entradas: no tiene entradas*/
+/*Salidas: Se escribe en el txt los datos*/
 void agregarPaciente(){
     char nombrePaciente[100];
     char apellidoPaciente[100];
@@ -150,7 +153,6 @@ void agregarPaciente(){
     fclose(miarchivo);
 }
 
-struct cita* nuevaCita;
 
 int main(int argc, char** argv) {
     imprimirMenu();
