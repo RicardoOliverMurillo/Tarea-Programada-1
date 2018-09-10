@@ -28,7 +28,7 @@ void imprimirMenu(){
                 agregarDoctor();
                 break;
             case 3:
-                printf("###");
+                agregarPaciente();
                 break;
             case 4:
                 printf("Seleccione la opción que desea ver: \n"
@@ -55,10 +55,10 @@ typedef struct doctor{
 
 typedef struct paciente{
     int id_paciente;
-    char* nombre;
-    char* primer_apellido;
+    char nombre[100];
+    char primer_apellido[100];
     int edad; /*edad debe ser en años*/
-    char* telefono; /*formato debe ser ####-####*/
+    char telefono[100]; /*formato debe ser ####-####*/
 } Paciente;
 
 typedef struct tiempo{
@@ -116,10 +116,10 @@ void agregarDoctor(){
     fclose(miarchivo);
 }
 
-void agrgarPaciente(){
-    char* nombrePaciente;
-    char* apellidoPaciente;
-    char* telefono;
+void agregarPaciente(){
+    char nombrePaciente[100];
+    char apellidoPaciente[100];
+    char telefono[100];
     int edad; 
     int id_paciente;
     Paciente* nuevoPaciente = (Paciente*)malloc(sizeof(Paciente));
@@ -128,12 +128,12 @@ void agrgarPaciente(){
     scanf("%s", &nombrePaciente);
     printf("Ingrese el apellido del paciente: ");
     scanf("%s", &apellidoPaciente);
-    printf("Ingrese el teléfono del paciente: ");
+    printf("Ingrese el teléfono del paciente (respete el formato ####-####: ");
     scanf("%s", &telefono);
     printf("Ingrese la edad en años del paciente: ");
-    scanf("%s", &edad);
+    scanf("%d", &edad);
     printf("Ingrese el id del paciente: ");
-    scanf("%s", &id_paciente);
+    scanf("%d", &id_paciente);
     
     strcpy(nuevoPaciente->nombre, nombrePaciente);
     strcpy(nuevoPaciente->primer_apellido, apellidoPaciente);
@@ -141,11 +141,11 @@ void agrgarPaciente(){
     nuevoPaciente->edad = edad;
     nuevoPaciente->id_paciente = id_paciente;
     
-    FILE miarchivo;
+    FILE * miarchivo;
     char* nombrearchivo = "pacientes.txt";
     
     miarchivo = fopen(nombrearchivo, "a"); //agrega al final de la lista
-    fprintf(miarchivo, "%s,%s,%s,%d,%d\r\n", 
+    fprintf(miarchivo, "%s, %s, %s, %d, %d\r\n", 
             nuevoPaciente->nombre,nuevoPaciente->primer_apellido, nuevoPaciente->telefono, nuevoPaciente->edad, nuevoPaciente->id_paciente);
     fclose(miarchivo);
 }
