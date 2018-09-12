@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 /*Función que activa el menú principal*/
 /*Entradas: no cuenta con entradas principales, dentro de la función se solicita el número de opción que desea ejecutar*/
@@ -37,6 +38,8 @@ void imprimirMenu(){
                 scanf("d%", &opcionEstadistica);
                 break;
             case 5:
+                /*Actualizar los datos del txt, con la informacion almacenada en las listas*/
+                
                 bandera = false;
                 break;
         }
@@ -47,10 +50,12 @@ void imprimirMenu(){
 
 typedef struct doctor{
     int id_medico;
+    int cantidad_citas;
     char nombre[100];
     char primer_apellido[100];
     char especialidad[100];
-    char turno[10];
+    char turno[10];    
+    struct doctor sig;
 } Doctor;
 
 typedef struct paciente{
@@ -81,13 +86,15 @@ typedef struct cita{
     Fecha fechaCita;
 }Cita;
 
+/*Almacena la informacion del doctor en un archivo 
+ y genera una lista enlazada*/
 void agregarDoctor(){
     char nombreDoctor[100];
     char primerApellido[100];
     char especialidadDoctor[100];
     char turno[10];
     int id_doctor;
-    
+    struct doctor sig = NULL;
     Doctor* nuevoDoctor = (Doctor*)malloc(sizeof(Doctor));
     
     printf("Inserte el nombre del doctor: ");
@@ -101,11 +108,14 @@ void agregarDoctor(){
     printf("Inserte el id del doctor: ");
     scanf("%d", &id_doctor);
     
+    
     strcpy(nuevoDoctor->nombre, nombreDoctor);
     strcpy(nuevoDoctor->primer_apellido, primerApellido);
     strcpy(nuevoDoctor->especialidad, especialidadDoctor);
     strcpy(nuevoDoctor->turno, turno);
     nuevoDoctor->id_medico = id_doctor;
+    
+    /*Quitar cuando ya funcione como queremos*/
     
     FILE * miarchivo;
     char* nombrearchivo = "doctores.txt";
@@ -143,6 +153,8 @@ void agregarPaciente(){
     strcpy(nuevoPaciente->telefono, telefono);
     nuevoPaciente->edad = edad;
     nuevoPaciente->id_paciente = id_paciente;
+    /*Se deben validar los formatos de los datos ingresados
+     */
     
     FILE * miarchivo;
     char* nombrearchivo = "pacientes.txt";
@@ -153,6 +165,55 @@ void agregarPaciente(){
     fclose(miarchivo);
 }
 
+void buscarDoctor(){
+    /*Un médico no puede tener dos citas en la misma fecha y hora
+    Un médico no puede tener citas en horas diferentes a las de su turno*/
+}
+
+void buscarPaciente(){
+    /*Un paciente no puede tener más de una cita en la misma fecha y hora un  
+    paciente  no  puede  programar  una  cita  con  un  médico  que  no  esté registrado*/
+    
+}
+
+void estaDoctor(Doctor* tempDoctor, char* nombre){
+    /*Busca al doctor en el archivo de texto*/
+    
+}
+
+void guardarPacientes(Paciente* ListaPacientes){
+    /*Almacena pacientes en el pacientes.txt*/
+}
+
+void guardarDoctores(Doctor* ListaDoctores){
+    /*Almacena doctores en el doctores.txt*/
+}
+
+void guardarCitas(Cita* ListaCitas){
+    /*Almacena doctores en el citas.txt*/
+}
+
+void cargarDatos(){
+    /*Cargar datos en memoria, crear listas enlazadas con los datos*/
+}
+
+void calcularPromedioDoctor(){
+    /*cantidad_citas/cantidad_medicos, estadistica 1 (dentro de la progra)
+     El  formato  del  mensaje  será:    Médico  con  más  citas  es nombre y apellido del médico, especialista en especialidad. 
+     Tiene X citas. Promedio general es : promedio general citas por médico*/
+}
+
+void calcularPromedioEspecialidad(){
+    /*Igual que el calcularPromedioDoctor solo que con especialidades*/
+    /*El formato del mensaje de salida es el siguiente: 
+    Especialidad con mas citas es especialidad
+    Promedio de citas de la especialidad es promedio*/
+}
+
+void calcularPromedioPacientes(){
+    /*dividir length(citas)/length(pacientes)
+     El  formato  del  mensaje  es:  Promedio  de  citas  por  paciente  es promedio*/
+}
 
 int main(int argc, char** argv) {
     imprimirMenu();
