@@ -28,7 +28,7 @@ void imprimirMenu(){
                 agregarDoctor();
                 break;
             case 3:
-                agregarPaciente();
+                //agregarPaciente();
                 break;
             case 4:
                 printf("Seleccione la opción que desea ver: \n"
@@ -47,18 +47,18 @@ void imprimirMenu(){
 
 typedef struct doctor{
     int id_medico;
-    char nombre[100];
-    char primer_apellido[100];
-    char especialidad[100];
+    char nombre[30];
+    char primer_apellido[30];
+    char especialidad[30];
     char turno[10];
 } Doctor;
 
 typedef struct paciente{
     int id_paciente;
-    char nombre[100];
-    char primer_apellido[100];
+    char nombre[30];
+    char primer_apellido[30];
     int edad; /*edad debe ser en años*/
-    char telefono[100]; /*formato debe ser ####-####*/
+    char telefono[30]; /*formato debe ser ####-####*/
 } Paciente;
 
 typedef struct tiempo{
@@ -82,9 +82,9 @@ typedef struct cita{
 }Cita;
 
 void agregarDoctor(){
-    char nombreDoctor[100];
-    char primerApellido[100];
-    char especialidadDoctor[100];
+    char nombreDoctor[30];
+    char primerApellido[30];
+    char especialidadDoctor[30];
     char turno[10];
     int id_doctor;
     
@@ -120,9 +120,9 @@ void agregarDoctor(){
 /*Entradas: no tiene entradas*/
 /*Salidas: Se escribe en el txt los datos*/
 void agregarPaciente(){
-    char nombrePaciente[100];
-    char apellidoPaciente[100];
-    char telefono[100];
+    char nombrePaciente[30];
+    char apellidoPaciente[30];
+    char telefono[30];
     int edad; 
     int id_paciente;
     Paciente* nuevoPaciente = (Paciente*)malloc(sizeof(Paciente));
@@ -152,6 +152,7 @@ void agregarPaciente(){
             nuevoPaciente->nombre,nuevoPaciente->primer_apellido, nuevoPaciente->telefono, nuevoPaciente->edad, nuevoPaciente->id_paciente);
     fclose(miarchivo);
 }
+
 
 
 int main(int argc, char** argv) {
