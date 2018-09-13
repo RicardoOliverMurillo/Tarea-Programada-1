@@ -1,57 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
-/*Función que activa el menú principal*/
-/*Entradas: no cuenta con entradas principales, dentro de la función se solicita el número de opción que desea ejecutar*/
-/*Salidas: menú principal de la aplicación, ejecuta funciones depende de la opción seleccionada*/
-
-void imprimirMenu(){
-        
-    bool bandera = true;
-    int opcionSeleccionada;
-    int opcionEstadistica = 0;
-    
-    while(bandera == true){
-        printf("###############################################################\n");
-        printf("Bienvenido... Seleccione alguna de las siguientes opciones: \n");
-        printf("1. Cargar datos \n2. Resgistar nuevo médico \n3. Programar citas \n4. Estadísticas \n5. Salir \n");
-        printf("\nOpción seleccionada:");
-        scanf("%d", &opcionSeleccionada);
-        printf("###############################################################\n");
-        
-        switch(opcionSeleccionada){
-            case 1:
-                printf("###");
-                break;
-            case 2:
-                agregarDoctor();
-                break;
-            case 3:
-                //agregarPaciente();
-                break;
-            case 4:
-                printf("Seleccione la opción que desea ver: \n"
-                "1. Médico con más citas y promedio general de citas\n 2. Especialidad con más citas y promedio de citas"
-                        "por especialidad\n 3. Promedio de citas por paciente\n");
-                scanf("d%", &opcionEstadistica);
-                break;
-            case 5:
-                bandera = false;
-                break;
-        }
-    }
-}
-
-/*ESTRUCTURAS*/
+#include <string.h>
 
 typedef struct doctor{
     int id_medico;
     char nombre[30];
     char primer_apellido[30];
     char especialidad[30];
-    char turno[10];
+    char turno[10];   
+    struct doctor* sig;
 } Doctor;
+Doctor* cabezaDoctor = NULL;
 
 typedef struct paciente{
     int id_paciente;
@@ -59,7 +19,9 @@ typedef struct paciente{
     char primer_apellido[30];
     int edad; /*edad debe ser en años*/
     char telefono[30]; /*formato debe ser ####-####*/
+    struct paciente* sig;
 } Paciente;
+Paciente* cabezaPaciente = NULL;
 
 typedef struct tiempo{
     int hora;
@@ -80,7 +42,11 @@ typedef struct cita{
     Tiempo horaCita;
     Fecha fechaCita;
 }Cita;
+Cita* cabezaCita = NULL;
 
+/*Función que agrega un nuevo doctor a la lista de doctores*/
+/*Entradas: no contiene entradas*/
+/*Salidas: se almacena el nuevo doctor en la lista*/
 void agregarDoctor(){
     char nombreDoctor[30];
     char primerApellido[30];
@@ -101,19 +67,22 @@ void agregarDoctor(){
     printf("Inserte el id del doctor: ");
     scanf("%d", &id_doctor);
     
+    
     strcpy(nuevoDoctor->nombre, nombreDoctor);
     strcpy(nuevoDoctor->primer_apellido, primerApellido);
     strcpy(nuevoDoctor->especialidad, especialidadDoctor);
     strcpy(nuevoDoctor->turno, turno);
     nuevoDoctor->id_medico = id_doctor;
     
-    FILE * miarchivo;
-    char* nombrearchivo = "doctores.txt";
-    
-    miarchivo=fopen(nombrearchivo,"a");
-    fprintf(miarchivo, "%s, %s, %s, %s, %d \r\n", 
-            nuevoDoctor->nombre, nuevoDoctor->primer_apellido, nuevoDoctor->especialidad, nuevoDoctor->turno, nuevoDoctor->id_medico);
-    fclose(miarchivo);
+    if(cabezaDoctor == NULL){
+        cabezaDoctor = nuevoDoctor;
+        cabezaDoctor->sig = NULL;
+    }
+    else{
+        nuevoDoctor->sig = cabezaDoctor;
+        cabezaDoctor = nuevoDoctor;
+    }
+    printf("El médico se añadió exitosamente...\n");
 }
 
 /*Función que se encarga de escribir en un txt los pacientes que se registran*/
@@ -125,6 +94,7 @@ void agregarPaciente(){
     char telefono[30];
     int edad; 
     int id_paciente;
+    
     Paciente* nuevoPaciente = (Paciente*)malloc(sizeof(Paciente));
     
     printf("Ingrese el nombre del paciente: ");
@@ -143,17 +113,170 @@ void agregarPaciente(){
     strcpy(nuevoPaciente->telefono, telefono);
     nuevoPaciente->edad = edad;
     nuevoPaciente->id_paciente = id_paciente;
+    /*Se deben validar los formatos de los datos ingresados
+     */
+    if(cabezaPaciente == NULL){
+        cabezaPaciente = nuevoPaciente;
+        cabezaPaciente->sig = NULL;
+    }
+    else{
+        nuevoPaciente->sig = cabezaPaciente;
+        cabezaPaciente = nuevoPaciente;
+    }
+    printf("El paciente se añadió exitosamente...\n");
+}
+
+/*void buscarDoctor(){
+    Un médico no puede tener dos citas en la misma fecha y hora
+    Un médico no puede tener citas en horas diferentes a las de su turno
+}*/
+
+bool buscarPaciente(char* nombrePaciente, Paciente* ListaPaciente){
+    /*Un paciente no puede tener más de una cita en la misma fecha y hora un  
+    paciente  no  puede  programar  una  cita  con  un  médico  que  no  esté registrado*/
+}
+
+bool buscarDoctor(char* nombreDoctor, Doctor* ListaDoctor){
+    /*Un paciente no puede tener más de una cita en la misma fecha y hora un  
+    paciente  no  puede  programar  una  cita  con  un  médico  que  no  esté registrado*/
+}
+
+/*Funcion que agrega una cita a la lista de citas
+ */
+void agregarCita(){
     
+}
+
+void estaDoctor(Doctor* tempDoctor, char* nombre){
+    /*Busca al doctor en el archivo de texto*/
+    
+}
+
+void guardarPacientes(Paciente* ListaPacientes){
+    /*Almacena pacientes en el pacientes.txt*/
     FILE * miarchivo;
     char* nombrearchivo = "pacientes.txt";
+    Paciente* temp = ListaPacientes;
     
-    miarchivo = fopen(nombrearchivo, "a"); //agrega al final de la lista
-    fprintf(miarchivo, "%s, %s, %s, %d, %d\r\n", 
-            nuevoPaciente->nombre,nuevoPaciente->primer_apellido, nuevoPaciente->telefono, nuevoPaciente->edad, nuevoPaciente->id_paciente);
+    while(temp != NULL){
+       miarchivo = fopen(nombrearchivo, "a"); //agrega al final de la lista
+        fprintf(miarchivo, "%s, %s, %s, %d, %d\r\n", 
+            temp->nombre,temp->primer_apellido, temp->telefono, temp->edad, temp->id_paciente);
+        temp = temp->sig;
+    }
     fclose(miarchivo);
 }
 
+void guardarDoctores(Doctor* ListaDoctores){
+    /*Almacena doctores en el doctores.txt*/
+    
+    FILE* miarchivo;
+    char* nombrearchivo = "doctores.txt";
+    Doctor* temp = ListaDoctores;
+    while(temp != NULL){
+        miarchivo=fopen(nombrearchivo,"a");
+        fprintf(miarchivo, "%s, %s, %s, %s, %d \r\n", 
+            temp->nombre, temp->primer_apellido, temp->especialidad, temp->turno, temp->id_medico);
+        temp = temp->sig;
+    }
+    fclose(miarchivo);
+    
+}
 
+void guardarCitas(Cita* ListaCitas){
+    /*Almacena doctores en el citas.txt*/
+}
+
+void separarString(char linea[]){
+    char * pch;
+    pch = strtok (linea," ,.-");
+    while (pch != NULL)
+    {
+        printf ("%s\n",pch);
+        pch = strtok (NULL, " ,.-");
+    }
+}
+void cargarDatos(){
+    FILE *miarchivo;
+    char linea[256];
+    char *resultado;
+
+    miarchivo = fopen("doctores.txt", "rt");
+
+    if (miarchivo == NULL) {
+            printf("Error: No se ha podido crear el fichero doctores.txt");
+    } else {
+            resultado = fgets(linea, 256, miarchivo);
+
+            while (resultado != NULL) {
+                    printf("%s", linea);
+                    separarString(linea);
+                    resultado = fgets(linea, 256, miarchivo);
+            }
+            fclose(miarchivo);
+    }
+}
+
+void calcularPromedioDoctor(){
+    /*cantidad_citas/cantidad_medicos, estadistica 1 (dentro de la progra)
+     El  formato  del  mensaje  será:    Médico  con  más  citas  es nombre y apellido del médico, especialista en especialidad. 
+     Tiene X citas. Promedio general es : promedio general citas por médico*/
+}
+
+void calcularPromedioEspecialidad(){
+    /*Igual que el calcularPromedioDoctor solo que con especialidades*/
+    /*El formato del mensaje de salida es el siguiente: 
+    Especialidad con mas citas es especialidad
+    Promedio de citas de la especialidad es promedio*/
+}
+
+void calcularPromedioPacientes(){
+    /*dividir length(citas)/length(pacientes)
+     El  formato  del  mensaje  es:  Promedio  de  citas  por  paciente  es promedio*/
+}
+
+/*Función que activa el menú principal*/
+/*Entradas: no cuenta con entradas principales, dentro de la función se solicita el número de opción que desea ejecutar*/
+/*Salidas: menú principal de la aplicación, ejecuta funciones depende de la opción seleccionada*/
+
+void imprimirMenu(){
+    bool bandera = true;
+    int opcionSeleccionada;
+    int opcionEstadistica = 0;
+    
+    while(bandera == true){
+        printf("###############################################################\n");
+        printf("Bienvenido... Seleccione alguna de las siguientes opciones: \n");
+        printf("1. Cargar datos \n2. Resgistar nuevo médico \n3. Programar citas \n4. Estadísticas \n5. Salir \n");
+        printf("\nOpción seleccionada:");
+        scanf("%d", &opcionSeleccionada);
+        printf("###############################################################\n");
+        
+        switch(opcionSeleccionada){
+            case 1:
+                cargarDatos();
+                break;
+            case 2:
+                agregarDoctor();
+                break;
+            case 3:
+                agregarCita();
+                break;
+            case 4:
+                printf("Seleccione la opción que desea ver: \n"
+                "1. Médico con más citas y promedio general de citas\n 2. Especialidad con más citas y promedio de citas"
+                        "por especialidad\n 3. Promedio de citas por paciente\n");
+                scanf("d%", &opcionEstadistica);
+                break;
+            case 5:
+                /*Actualizar los datos del txt, con la informacion almacenada en las listas*/
+                guardarDoctores(cabezaDoctor);
+                guardarPacientes(cabezaPaciente);
+                bandera = false;
+                break;
+        }
+    }
+}
 
 int main(int argc, char** argv) {
     imprimirMenu();
