@@ -39,8 +39,9 @@ typedef struct fecha{
 typedef struct cita{
     int id_medico;
     int id_paciente;
-    Tiempo horaCita;
-    Fecha fechaCita;
+    char horaCita[10];
+    char fechaCita[10];
+    struct cita* sig;
 }Cita;
 Cita* cabezaCita = NULL;
 
@@ -113,9 +114,12 @@ void agregarPaciente(){
     strcpy(nuevoPaciente->telefono, telefono);
     nuevoPaciente->edad = edad;
     nuevoPaciente->id_paciente = id_paciente;
+    
+    
+    
     /*Se deben validar los formatos de los datos ingresados
      */
-    if(cabezaPaciente == NULL){
+    /*if(cabezaPaciente == NULL){
         cabezaPaciente = nuevoPaciente;
         cabezaPaciente->sig = NULL;
     }
@@ -123,7 +127,7 @@ void agregarPaciente(){
         nuevoPaciente->sig = cabezaPaciente;
         cabezaPaciente = nuevoPaciente;
     }
-    printf("El paciente se añadió exitosamente...\n");
+    printf("El paciente se añadió exitosamente...\n");*/
 }
 
 /*void buscarDoctor(){
@@ -136,20 +140,81 @@ bool buscarPaciente(char* nombrePaciente, Paciente* ListaPaciente){
     paciente  no  puede  programar  una  cita  con  un  médico  que  no  esté registrado*/
 }
 
-bool buscarDoctor(char* nombreDoctor, Doctor* ListaDoctor){
-    /*Un paciente no puede tener más de una cita en la misma fecha y hora un  
-    paciente  no  puede  programar  una  cita  con  un  médico  que  no  esté registrado*/
+Doctor buscarDoctor(char* nombreDoctor, Doctor* ListaDoctor){
+    
 }
 
 /*Funcion que agrega una cita a la lista de citas
  */
-void agregarCita(){
-    
+bool estaDoctor(Doctor* Doctor, char* nombreDoctor){
+        while (Doctor != NULL){
+        if (strcmp(Doctor->nombre, nombreDoctor)==0){
+            return true;
+        }
+        else{
+            Doctor=Doctor->sig;
+        }
+    }
+    return false;
 }
 
-void estaDoctor(Doctor* tempDoctor, char* nombre){
-    /*Busca al doctor en el archivo de texto*/
+bool estaPaciente(Paciente* tempPaciente, char* nombrePaciente){
+    while (tempPaciente != NULL){
+        if (strcmp(tempPaciente->nombre, nombrePaciente)==0){
+            return true;
+        }
+        else{
+            tempPaciente=tempPaciente->sig;
+        }
+    }
+    return false;
+}
+void generarCita(){
+    char doctorSolicitado [20];
+    char nombrePaciente[20];
+    int id_doctor;
+    int id_cliente;
+    char fecha[10];
+    char hora[10];
     
+    printf("Inserte el nombre del paciente: ");
+    scanf("%s", &nombrePaciente);
+    if (estaPaciente(cabezaPaciente, nombrePaciente)==false){
+        agregarPaciente();
+    }
+    else{
+        printf("%s", cabezaPaciente->nombre);
+    }
+    printf("Inserte el nombre del doctor: ");
+    scanf("%s", &doctorSolicitado);
+    if (estaDoctor(cabezaDoctor, doctorSolicitado)==false){
+        agregarDoctor();
+    }
+    else{
+        printf("%s", cabezaDoctor->nombre);
+    }
+    printf("Inserte la fecha de la cita: ");
+    scanf("%s", &fecha);
+    printf("Inserte la hora: ");
+    scanf("%s", &hora);
+    id_doctor=cabezaDoctor->id_medico;
+    id_cliente = cabezaPaciente->id_paciente;
+    printf("%d,%d,%s,%s", cabezaDoctor->id_medico, cabezaPaciente->id_paciente, fecha, hora);
+    Cita* nuevaCita = (Cita*)malloc(sizeof(Cita));
+    strcpy(nuevaCita->fechaCita, fecha);
+    strcpy(nuevaCita->horaCita, hora);
+    nuevaCita->id_medico=cabezaDoctor->id_medico;
+    nuevaCita->id_paciente=cabezaPaciente->id_paciente;
+    
+    if(cabezaCita == NULL){
+        cabezaCita = nuevaCita;
+        cabezaCita->sig = NULL;
+    }
+    else{
+        nuevaCita->sig = cabezaCita;
+        cabezaCita = nuevaCita;
+    }
+    printf("hice la cita");
 }
 
 void guardarPacientes(Paciente* ListaPacientes){
@@ -183,8 +248,19 @@ void guardarDoctores(Doctor* ListaDoctores){
     
 }
 
-void guardarCitas(Cita* ListaCitas){
+void guardarCitas(Cita* nuevaCita){
     /*Almacena doctores en el citas.txt*/
+    
+    FILE* miarchivo;
+    char* nombrearchivo = "Citas.txt";
+    Cita* temp = nuevaCita;
+    while(temp != NULL){
+        miarchivo=fopen(nombrearchivo,"a");
+        fprintf(miarchivo, "%d, %d, %s, %s, %d \r\n", 
+            temp->id_medico, temp->id_paciente, temp->fechaCita, temp->horaCita);
+        temp = temp->sig;
+    }
+    fclose(miarchivo);
 }
 
 void separarString(char linea[]){
@@ -254,13 +330,17 @@ void imprimirMenu(){
         
         switch(opcionSeleccionada){
             case 1:
+                system("clear");
                 cargarDatos();
+                
                 break;
             case 2:
+                system("clear");
                 agregarDoctor();
                 break;
             case 3:
-                agregarCita();
+                system("clear");
+                generarCita();
                 break;
             case 4:
                 printf("Seleccione la opción que desea ver: \n"
@@ -272,6 +352,7 @@ void imprimirMenu(){
                 /*Actualizar los datos del txt, con la informacion almacenada en las listas*/
                 guardarDoctores(cabezaDoctor);
                 guardarPacientes(cabezaPaciente);
+                guardarCitas(cabezaCita);
                 bandera = false;
                 break;
         }
