@@ -269,6 +269,10 @@ int largoDoctores(Doctor* cabeza){
     return largo;
 }
 
+void aumentarCita(Doctor* actual){
+    
+   
+}
 /******************************************************************************/
 /*FUNCIONES PACIENTE*/
 
@@ -441,10 +445,18 @@ int largoPacientes(Paciente* cabeza){
 /*FUNCIONES CITA*/
 
 /*Funcion para buscar al doctor en el sistema*/
-bool estaDoctor(Doctor* Doctor, char* nombreDoctor){
+bool estaDoctor(Doctor* Doctor, char* nombreDoctor, int verificar){
         while (Doctor != NULL){
         if (strcmp(Doctor->nombre, nombreDoctor)==0){
-            return true;
+            if(verificar ==0){
+               int num = (int)Doctor->cantCitas[0]-47;
+                char c = '0'+num;
+                Doctor->cantCitas[0]= c;
+                return true;
+            }
+            else{
+                return true;
+            } 
         }
         else{
             Doctor=Doctor->sig;
@@ -486,12 +498,14 @@ void generarCita(){
     /*Verifica que el doctor se encuentre en el sistema, en caso de no estarlo lo crea*/
     printf("Inserte el nombre del doctor:");
     scanf("%s", &doctorSolicitado);
-    if (estaDoctor(cabezaDoctor, doctorSolicitado)==false){
+    if (estaDoctor(cabezaDoctor, doctorSolicitado,1)==false){
         printf("El doctor no se encuentra registrado\n");
         //agregarDoctor();
     }else{
-        if (estaDoctor(cabezaDoctor, doctorSolicitado)==true){
+        if (estaDoctor(cabezaDoctor, doctorSolicitado,0)==true){
             strcpy(id_doctor, cabezaDoctor->id_medico);
+            
+            
         }
         printf("Inserte la fecha de la cita: ");
         scanf("%s", &fecha);
