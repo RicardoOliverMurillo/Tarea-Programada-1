@@ -55,10 +55,11 @@ typedef struct fecha{
 }Fecha;
 
 typedef struct cita{
-    int id_medico;
-    int id_paciente;
-    Tiempo horaCita;
-    Fecha fechaCita;
+    char id_medico[30];
+    char id_paciente[30];
+    char horaCita[100];
+    char fechaCita[100];
+    struct cita* sig;
 }Cita;
 Cita* cabezaCita = NULL;
 
@@ -439,13 +440,189 @@ int largoPacientes(Paciente* cabeza){
 /******************************************************************************/
 /*FUNCIONES CITA*/
 
+/*Funcion para buscar al doctor en el sistema*/
+bool estaDoctor(Doctor* Doctor, char* nombreDoctor){
+        while (Doctor != NULL){
+        if (strcmp(Doctor->nombre, nombreDoctor)==0){
+            return true;
+        }
+        else{
+            Doctor=Doctor->sig;
+        }
+    }
+    return false;
+}
+
+/*Funcion para buscar el paciente en el sistema*/
+bool estaPaciente(Paciente* tempPaciente, char* nombrePaciente){
+    while (tempPaciente != NULL){
+        if (strcmp(tempPaciente->nombre, nombrePaciente)==0){
+            return true;
+        }
+        else{
+            tempPaciente=tempPaciente->sig;
+        }
+    }
+    return false;
+}
+/*Funcion para agregar una cita*/
+void generarCita(){
+    char doctorSolicitado[20];
+    char nombrePaciente[20];
+    char id_doctor[30];
+    char id_paciente[30];
+    char fecha[100];
+    char hora[100];
+    
+    /*verifica que el paciente este en el sistema, en caso de no estarlo debe crear al usuario*/
+    printf("Inserte el nombre del paciente: ");
+    scanf("%s", &nombrePaciente);
+    if (estaPaciente(cabezaPaciente, nombrePaciente)==false){
+        printf("Paciente no registrado, ingrese su información personal...\n");
+        agregarPaciente();
+    }else{
+        strcpy(id_paciente, cabezaPaciente->id_paciente);
+    }
+    /*Verifica que el doctor se encuentre en el sistema, en caso de no estarlo lo crea*/
+    printf("Inserte el nombre del doctor:");
+    scanf("%s", &doctorSolicitado);
+    if (estaDoctor(cabezaDoctor, doctorSolicitado)==false){
+        printf("El doctor no se encuentra registrado\n");
+        //agregarDoctor();
+    }else{
+        if (estaDoctor(cabezaDoctor, doctorSolicitado)==true){
+            strcpy(id_doctor, cabezaDoctor->id_medico);
+        }
+        printf("Inserte la fecha de la cita: ");
+        scanf("%s", &fecha);
+        printf("Inserte la hora: ");
+        scanf("%s", &hora);
+        
+        /*crea la estructura cita para almacenar la informacion en el sistema de citas*/
+        Cita* nuevaCita = (Cita*)malloc(sizeof(Cita));
+        
+        strcpy(nuevaCita->fechaCita, fecha);
+        strcpy(nuevaCita->horaCita, hora);
+        strcpy(nuevaCita->id_medico, cabezaDoctor->id_medico);
+        strcpy(nuevaCita->id_paciente, cabezaPaciente->id_paciente);
+        
+        if(cabezaCita == NULL){
+            cabezaCita = nuevaCita;
+            cabezaCita->sig = NULL;
+        }
+        else{
+            nuevaCita->sig = cabezaCita;
+            cabezaCita = nuevaCita;
+        }
+        printf("Cita registrada\n");
+    }
+}
+
+/*Funcion que guarda los elementos de la lista citas en el archivo citas.txt*/
+void guardarCitas(Cita* cabeza){
+    FILE* miarchivo;
+    char* nombrearchivo = "citas.txt";
+    Cita* temp = cabeza;
+    miarchivo=fopen(nombrearchivo,"w");
+    
+    while(temp != NULL){
+        fprintf(miarchivo, "%s %s %s %s\r\n", 
+            temp->id_medico, temp->id_paciente, temp->fechaCita, temp->horaCita);
+        temp = temp->sig;
+    }
+    fclose(miarchivo);
+}
+
+/*Funcion que recorre la linea de texto y separa las palabras cuando encuentra un espacio*/
+/*Salida: estructura cita*/
+Cita* leerStringCita(char linea[]){
+    //atributos
+    Cita* nuevaCita = (Cita*)malloc(sizeof(Cita));
+    char * pch;
+    pch = strtok(linea," ,.");
+    int contador = 0;
+    
+    //recorre la linea de texto
+    while (pch != NULL)
+    {
+        //copia las palabras en el espacio correspondiente de la estructura
+        switch(contador){
+            case 0:
+                strcpy(nuevaCita->id_medico, pch);
+            case 1:
+                strcpy(nuevaCita->id_paciente, pch);
+            case 2:
+                strcpy(nuevaCita->fechaCita, pch);
+            case 3:
+                strcpy(nuevaCita->horaCita, pch);
+
+        }
+        contador = contador+1;
+        pch = strtok(NULL, " ,.");
+        
+    }
+    return nuevaCita;
+}
+
+/*Función que carga los datos de citas.txt a memoria*/
+void cargarDatosCitas(){
+    //atributos
+    FILE* miarchivo;
+    char linea[256];
+    char* resultado;
+    miarchivo = fopen("citas.txt", "rt");
+    //verifica que el archivo exista
+    if (miarchivo == NULL) {
+            printf("Error: No se ha podido crear el fichero citas.txt");
+    }else{
+        //verifica que no haya llegado al final del archivo
+        while (feof(miarchivo) == 0){
+            resultado = fgets(linea, 256, miarchivo);
+            Cita* nuevaCita = (Cita*)malloc(sizeof(Cita));
+            if((resultado != NULL) && (*resultado != '#')){
+                
+                nuevaCita = leerStringCita(resultado);
+               
+                //se añade a la lista de doctores
+                if(cabezaCita == NULL){
+                    cabezaCita = nuevaCita;
+                    cabezaCita->sig = NULL;
+                }else{
+                    nuevaCita->sig = cabezaCita;
+                    cabezaCita = nuevaCita;
+                }
+            }
+        }
+    }
+}
+
+/*Función para imprimir la lista de citas*/
+void imprimirListaCita(Cita* ptr){
+    //recorre la lista hasta que se acaben las estructuras
+    while (ptr != NULL){
+        printf("Información sobre la cita: id medico: %s, id paciente: %s, fecha: %s, hora: %s\n", ptr->id_medico, ptr->id_paciente, 
+                ptr->fechaCita, ptr->horaCita);
+        ptr = ptr ->sig;
+    }
+}
+
+/*Funcion que devuelve el largo de la lista citas*/
+int largoCitas(Cita* cabeza){
+    int largo = 0;
+    Cita* temp = cabeza;
+    while(temp != NULL){
+        ++largo;
+        temp = temp->sig;
+    }
+    return largo;
+}
 /******************************************************************************/
 /*FUNCIONES ESTADISTICAS*/
 
 /*Funcion que genera el promedio de pacientes con respecto a citas*/
 void promedioPacientes(){
     int pacientes = largoPacientes(cabezaPaciente);
-    int citas = largoDoctores(cabezaDoctor);
+    int citas = largoCitas(cabezaCita);
     float promedio = pacientes/citas;
     printf("Promedio de citas por paciente es %f \n", promedio);
 }
@@ -470,6 +647,11 @@ void promedioDoctores(){
         }
         temp = temp->sig;
     }
+    
+    int citas = largoCitas(cabezaCita);
+    int doc = largoDoctores(cabezaDoctor);
+    promedio = citas/doc;
+    
     //Valida si existen dolores con citas
     if(mayor>0){
         printf("Médico  con  más  citas  es %s  %s, especialista en %s. Tiene %d cita(as).\n", nombre, apellido, especialidad, mayor+1);
@@ -532,11 +714,13 @@ void imprimirMenu(){
             case 1:
                 cargarDatosDoctores();
                 cargarDatosPacientes();
+                cargarDatosCitas();
                 //largo de listas para verificar que haya infromacion para mostrar
                 int largoDoc = largoDoctores(cabezaDoctor);
                 int largoPaciente = largoPacientes(cabezaPaciente);
+                int largoCita = largoCitas(cabezaCita);
                 
-                if((largoDoc == 0)&& (largoPaciente == 0)){
+                if((largoDoc == 0)&& (largoPaciente == 0) && (largoCita == 0)){
                     printf("No existen datos disponibles para cargar...\n");
                 }else{
                     printf("Sus datos fueron cargados a memoria...\n");
@@ -546,7 +730,7 @@ void imprimirMenu(){
                 agregarDoctor();
                 break;
             case 3:
-                agregarPaciente();
+                generarCita();
                 break;
             case 4:
                 imprimirMenuEstadisticas();
@@ -555,6 +739,7 @@ void imprimirMenu(){
                 imprimirListaDoctor(cabezaDoctor);
                 guardarDatosDoctores(cabezaDoctor);
                 guardarDatosPaciente(cabezaPaciente);
+                guardarCitas(cabezaCita);
                 bandera = false;
                 break;
         }
