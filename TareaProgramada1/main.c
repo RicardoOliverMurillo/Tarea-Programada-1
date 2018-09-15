@@ -736,10 +736,10 @@ void imprimirMenu(){
                 imprimirMenuEstadisticas();
                 break;
             case 5:
-                imprimirListaDoctor(cabezaDoctor);
                 guardarDatosDoctores(cabezaDoctor);
                 guardarDatosPaciente(cabezaPaciente);
                 guardarCitas(cabezaCita);
+                
                 bandera = false;
                 break;
         }
