@@ -39,8 +39,8 @@ typedef struct fecha{
 typedef struct cita{
     int id_medico;
     int id_paciente;
-    char horaCita[10];
-    char fechaCita[10];
+    char horaCita[100];
+    char fechaCita[100];
     struct cita* sig;
 }Cita;
 Cita* cabezaCita = NULL;
@@ -102,7 +102,7 @@ void agregarPaciente(){
     scanf("%s", &nombrePaciente);
     printf("Ingrese el apellido del paciente: ");
     scanf("%s", &apellidoPaciente);
-    printf("Ingrese el teléfono del paciente (respete el formato ####-####: ");
+    printf("Ingrese el teléfono del paciente (respete el formato ####-####): ");
     scanf("%s", &telefono);
     printf("Ingrese la edad en años del paciente: ");
     scanf("%d", &edad);
@@ -119,7 +119,7 @@ void agregarPaciente(){
     
     /*Se deben validar los formatos de los datos ingresados
      */
-    /*if(cabezaPaciente == NULL){
+    if(cabezaPaciente == NULL){
         cabezaPaciente = nuevoPaciente;
         cabezaPaciente->sig = NULL;
     }
@@ -127,25 +127,10 @@ void agregarPaciente(){
         nuevoPaciente->sig = cabezaPaciente;
         cabezaPaciente = nuevoPaciente;
     }
-    printf("El paciente se añadió exitosamente...\n");*/
+    printf("El paciente se añadió exitosamente...\n");
 }
 
-/*void buscarDoctor(){
-    Un médico no puede tener dos citas en la misma fecha y hora
-    Un médico no puede tener citas en horas diferentes a las de su turno
-}*/
-
-bool buscarPaciente(char* nombrePaciente, Paciente* ListaPaciente){
-    /*Un paciente no puede tener más de una cita en la misma fecha y hora un  
-    paciente  no  puede  programar  una  cita  con  un  médico  que  no  esté registrado*/
-}
-
-Doctor buscarDoctor(char* nombreDoctor, Doctor* ListaDoctor){
-    
-}
-
-/*Funcion que agrega una cita a la lista de citas
- */
+/*Funcion para buscar al doctor en el sistema*/
 bool estaDoctor(Doctor* Doctor, char* nombreDoctor){
         while (Doctor != NULL){
         if (strcmp(Doctor->nombre, nombreDoctor)==0){
@@ -157,7 +142,7 @@ bool estaDoctor(Doctor* Doctor, char* nombreDoctor){
     }
     return false;
 }
-
+/*Funcion para buscar el paciente en el sistema*/
 bool estaPaciente(Paciente* tempPaciente, char* nombrePaciente){
     while (tempPaciente != NULL){
         if (strcmp(tempPaciente->nombre, nombrePaciente)==0){
@@ -169,43 +154,37 @@ bool estaPaciente(Paciente* tempPaciente, char* nombrePaciente){
     }
     return false;
 }
+/*Funcion para agregar una cita*/
 void generarCita(){
     char doctorSolicitado [20];
     char nombrePaciente[20];
     int id_doctor;
     int id_cliente;
-    char fecha[10];
-    char hora[10];
-    
+    char fecha[100];
+    char hora[100];
+    /*verifica que el paciente este en el sistema, en caso de no estarlo debe crear al usuario*/
     printf("Inserte el nombre del paciente: ");
     scanf("%s", &nombrePaciente);
     if (estaPaciente(cabezaPaciente, nombrePaciente)==false){
         agregarPaciente();
     }
-    else{
-        printf("%s", cabezaPaciente->nombre);
-    }
-    printf("Inserte el nombre del doctor: ");
+    /*Verifica que el doctor se encuentre en el sistema, en caso de no estarlo lo crea*/
+    printf("Inserte el nombre del doctor:");
     scanf("%s", &doctorSolicitado);
     if (estaDoctor(cabezaDoctor, doctorSolicitado)==false){
+        printf("El doctor no se encuentra registrado\n");
         agregarDoctor();
-    }
-    else{
-        printf("%s", cabezaDoctor->nombre);
     }
     printf("Inserte la fecha de la cita: ");
     scanf("%s", &fecha);
     printf("Inserte la hora: ");
     scanf("%s", &hora);
-    id_doctor=cabezaDoctor->id_medico;
-    id_cliente = cabezaPaciente->id_paciente;
-    printf("%d,%d,%s,%s", cabezaDoctor->id_medico, cabezaPaciente->id_paciente, fecha, hora);
+    /*crea la estructura cita para almacenar la informacion en el sistema de citas*/
     Cita* nuevaCita = (Cita*)malloc(sizeof(Cita));
     strcpy(nuevaCita->fechaCita, fecha);
     strcpy(nuevaCita->horaCita, hora);
     nuevaCita->id_medico=cabezaDoctor->id_medico;
     nuevaCita->id_paciente=cabezaPaciente->id_paciente;
-    
     if(cabezaCita == NULL){
         cabezaCita = nuevaCita;
         cabezaCita->sig = NULL;
@@ -256,7 +235,7 @@ void guardarCitas(Cita* nuevaCita){
     Cita* temp = nuevaCita;
     while(temp != NULL){
         miarchivo=fopen(nombrearchivo,"a");
-        fprintf(miarchivo, "%d, %d, %s, %s, %d \r\n", 
+        fprintf(miarchivo, "%d, %d, %s, %s \r\n", 
             temp->id_medico, temp->id_paciente, temp->fechaCita, temp->horaCita);
         temp = temp->sig;
     }
