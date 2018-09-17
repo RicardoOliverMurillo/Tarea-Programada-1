@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
+#include <regex.h>
 
 /******************************************************************************/
 /*ESTRUCTURAS*/
@@ -110,6 +111,60 @@ void imprimirListaEspecialidad(Especialidad* ptr){
         printf("El nombre de la especialidad es %s con %d cantidad de citas", ptr->nombre, ptr->cant);
         ptr = ptr ->sig;
     }
+}
+bool compararTelefono(char* tempTelefono){
+    regex_t regex;
+    int reti;
+    char msgbuf[100];
+    /* Compile regular expression */
+    reti = regcomp(&regex, "^([0-9]{4})-([[0-9]{4})", REG_EXTENDED);
+    if (reti) {
+        fprintf(stderr, "Could not compile regex\n");
+        exit(1);
+    }
+    /* Execute regular expression */
+    reti = regexec(&regex, tempTelefono, 0, NULL, 0);
+    if (!reti) {
+        return true;
+    }
+    else if (reti == REG_NOMATCH) {
+        return false;
+    }
+    else {
+        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+        fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+        exit(1);
+    }
+
+    /* Free memory allocated to the pattern buffer by regcomp() */
+    regfree(&regex);
+}
+bool compararFecha(char* tempFecha){
+    regex_t regex;
+    int reti;
+    char msgbuf[100];
+    /* Compile regular expression */
+    reti = regcomp(&regex, "^([0-9]{1}|[0-9]{2})-([0-9]{1}|[0-9]{2})-[0-9]{4}", REG_EXTENDED);
+    if (reti) {
+        fprintf(stderr, "Could not compile regex\n");
+        exit(1);
+    }
+    /* Execute regular expression */
+    reti = regexec(&regex, tempFecha, 0, NULL, 0);
+    if (!reti) {
+        return true;
+    }
+    else if (reti == REG_NOMATCH) {
+        return false;
+    }
+    else {
+        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+        fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+        exit(1);
+    }
+
+    /* Free memory allocated to the pattern buffer by regcomp() */
+    regfree(&regex);
 }
 /******************************************************************************/
 /*FUNCIONES DOCTOR*/
@@ -307,6 +362,10 @@ void agregarPaciente(){
     scanf("%s", &apellidoPaciente);
     printf("Ingrese el teléfono del paciente (respete el formato ####-####: ");
     scanf("%s", &telefono);
+    while(compararTelefono(telefono)==false){
+        printf("Inserte un formato de telefono valido (####-####): ");
+        scanf("%s", &telefono);
+    }
     printf("Ingrese la edad en años del paciente: ");
     scanf("%s", &edad);
     printf("Ingrese el id del paciente: ");
@@ -507,8 +566,12 @@ void generarCita(){
             
             
         }
-        printf("Inserte la fecha de la cita: ");
+        printf("Inserte la fecha (dd-mm-aaaa): ");
         scanf("%s", &fecha);
+        while(compararFecha(fecha)==false){
+            printf("Inserte un formato de fecha valido (dd-mm-aaaa): ");
+            scanf("%s", &fecha);
+        }
         printf("Inserte la hora: ");
         scanf("%s", &hora);
         
@@ -642,7 +705,7 @@ void promedioPacientes(){
 }
 
 /*Funcion que muestra el médico con más citas y el promedio de citas entre doctores*/
-void promedioDoctores(){
+/*void promedioDoctores(){
     int mayor = 0;
     Doctor* temp = cabezaDoctor;
     char nombre[30];
@@ -673,7 +736,7 @@ void promedioDoctores(){
     }else{
         printf("Los medicos no tienen citas\n");
     }
-}
+}*/
 
 /*Funcion que muestra el promedio de especialidades*/
 void promedioEspecialidad(){
@@ -694,7 +757,7 @@ void imprimirMenuEstadisticas(){
   
     switch(opcion){
         case 1:
-            promedioDoctores();
+            /*promedioDoctores();*/
             break;
         case 2:
             printf("No disponible/n");
