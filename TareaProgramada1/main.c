@@ -643,7 +643,7 @@ void promedioPacientes(){
 
 /*Funcion que muestra el médico con más citas y el promedio de citas entre doctores*/
 void promedioDoctores(){
-    int mayor = 0;
+    int mayor = -1;
     Doctor* temp = cabezaDoctor;
     char nombre[30];
     char apellido[30];
@@ -651,13 +651,14 @@ void promedioDoctores(){
     int promedio = 0;
     
     while(temp != NULL){
-        int num = (int)temp->cantCitas[0]-48; //convierte el char a un int
+        int num = (int)(temp->cantCitas[0]-48); //convierte el char a un int
         
         //printf("Numero: %d y nombre: %s\n", num, temp->nombre);
         if(num > mayor){
             strlcpy(nombre, temp->nombre, sizeof(nombre));
             strlcpy(apellido, temp->primer_apellido,sizeof(apellido));
             strlcpy(especialidad, temp->especialidad, sizeof(especialidad));
+            mayor = num;
         }
         temp = temp->sig;
     }
@@ -668,7 +669,7 @@ void promedioDoctores(){
     
     //Valida si existen dolores con citas
     if(mayor>0){
-        printf("Médico  con  más  citas  es %s  %s, especialista en %s. Tiene %d cita(as).\n", nombre, apellido, especialidad, mayor+1);
+        printf("Médico  con  más  citas  es %s  %s, especialista en %s. Tiene %d cita(as).\n", nombre, apellido, especialidad, mayor);
         printf("Promedio general es : %d citas por médico\n", promedio);
     }else{
         printf("Los medicos no tienen citas\n");
