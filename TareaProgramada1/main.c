@@ -935,7 +935,6 @@ void imprimirMenu(){
                 agregarDoctor();
                 break;
             case 3:
-                imprimirListaCita(cabezaCita);
                 generarCita();
                 break;
             case 4:
