@@ -36,7 +36,7 @@ typedef struct doctor{
     char nombre[30];
     char primer_apellido[30];
     char especialidad[30];
-    char turno[10];
+    char turno[20];
     char cantCitas[10];
     struct doctor* sig;
 } Doctor;
@@ -123,7 +123,7 @@ bool compararTelefono(char* tempTelefono){
     int reti;
     char msgbuf[100];
     /* Compile regular expression */
-    reti = regcomp(&regex, "^([0-9]{4})-([[0-9]{4})", REG_EXTENDED);
+    reti = regcomp(&regex, "^([0-9]{4})-([[0-9]{4})$", REG_EXTENDED);
     if (reti) {
         fprintf(stderr, "Could not compile regex\n");
         exit(1);
@@ -146,36 +146,6 @@ bool compararTelefono(char* tempTelefono){
     regfree(&regex);
 }
 
-
-bool compararHora(char* tempHora){
-    regex_t regex;
-    int reti;
-    char msgbuf[100];
-    /* Compile regular expression */
-    reti = regcomp(&regex, "^([0-9]{4})-([[0-9]{4})", REG_EXTENDED);
-    if (reti) {
-        fprintf(stderr, "Could not compile regex\n");
-        exit(1);
-    }
-    /* Execute regular expression */
-    reti = regexec(&regex, tempHora, 0, NULL, 0);
-    if (!reti) {
-        return true;
-    }
-    else if (reti == REG_NOMATCH) {
-        return false;
-    }
-    else {
-        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
-        fprintf(stderr, "Regex match failed: %s\n", msgbuf);
-        exit(1);
-    }
-
-    /* Free memory allocated to the pattern buffer by regcomp() */
-    regfree(&regex);
-}
-
-
 /*Funcion que compara el formato de fecha que se ingresa y verifica que sea compatible
  con el que maneja el sistema*/
 bool compararFecha(char* tempFecha){
@@ -183,7 +153,7 @@ bool compararFecha(char* tempFecha){
     int reti;
     char msgbuf[100];
     /* Compile regular expression */
-    reti = regcomp(&regex, "^([0-9]{1}|[0-9]{2})-([0-9]{1}|[0-9]{2})-[0-9]{4}", REG_EXTENDED);
+    reti = regcomp(&regex, "^([0-9]{1}|[0-9]{2})-([0-9]{1}|[0-9]{2})-([0-9]{4})$", REG_EXTENDED);
     if (reti) {
         fprintf(stderr, "Could not compile regex\n");
         exit(1);
@@ -346,7 +316,7 @@ void cargarDatosDoctores(){
     miarchivo = fopen("medicos.txt", "rt");
     //verifica que el archivo exista
     if (miarchivo == NULL) {
-            printf("Error: No se ha podido crear el fichero doctores.txt");
+            printf("Error: No se ha podido crear el fichero doctores.txt\n");
     }else{
         //verifica que no haya llegado al final del archivo
         while (feof(miarchivo) == 0){
@@ -418,10 +388,12 @@ void agregarPaciente(){
     scanf("%s", &apellidoPaciente);
     printf("Ingrese el teléfono del paciente (respete el formato ####-####: ");
     scanf("%s", &telefono);
+    
     while(compararTelefono(telefono)==false){
         printf("Inserte un formato de telefono valido (####-####): ");
         scanf("%s", &telefono);
     }
+    
     printf("Ingrese la edad en años del paciente: ");
     scanf("%s", &edad);
     printf("Ingrese el id del paciente: ");
@@ -523,7 +495,7 @@ void cargarDatosPacientes(){
     miarchivo = fopen("pacientes.txt", "rt");
     //verifica que el archivo exista
     if (miarchivo == NULL) {
-            printf("Error: No se ha podido crear el fichero pacientes.txt");
+            printf("Error: No se ha podido crear el fichero pacientes.txt\n");
     }else{
         //verifica que no haya llegado al final del archivo
         while (feof(miarchivo) == 0){
@@ -621,6 +593,33 @@ bool horarioRepetidoDoctor(char fecha[], char id_medico[], char hora[]){
     return false;
 }
 
+bool validarTurno(char turno[], char hora[]){
+    int numero;
+    int opcion;
+    numero = atoi(hora);
+    if(strcmp(turno, "dia")==0){
+        opcion = 1;
+    }else if(strcmp(turno, "tarde")==0){
+        opcion = 2;
+    }else{
+        opcion = 3;
+    }
+    switch(opcion){
+        case 1:
+            if((numero>=8) && (numero<=12)){
+                return true;
+            }
+        case 2:
+            if((numero>=14) && (numero<=19)){
+                return true;
+            }
+        case 3:
+            if(((numero>=9) && (numero<=12)) || ((numero>=14) && (numero<=17))){
+                return true;
+            }
+    }
+    return false;
+}
 /*Funcion para agregar una cita*/
 void generarCita(){
     char doctorSolicitado[20];
@@ -655,9 +654,16 @@ void generarCita(){
             printf("Inserte un formato de fecha valido (dd-mm-aaaa): ");
             scanf("%s", &fecha);
         }
-       
         printf("Inserte la hora: ");
         scanf("%s", &hora);
+        
+        int largo = strlen(hora);
+        
+        while(largo != 2){
+            printf("Inserte un formato de hora válido (##): ");
+            scanf("%s", &hora);
+            largo = strlen(hora);
+        }
         
         if(horarioRepetidoPaciente(fecha, cabezaPaciente->id_paciente, hora)== true){
             printf("El paciente tiene una cita previamente registrada a esa hora en esa fecha...\n"
@@ -674,6 +680,11 @@ void generarCita(){
             printf("Inserte la fecha (dd-mm-aaaa): ");
             scanf("%s", &fecha);
             printf("Inserte la hora: ");
+            scanf("%s", &hora);
+        }
+        
+        if(validarTurno(cabezaDoctor->turno, hora)==false){
+            printf("El horario del doctor no es compatible con la hora\nIngrese otro horario: ");
             scanf("%s", &hora);
         }
         
@@ -744,6 +755,16 @@ Cita* leerStringCita(char linea[]){
     return nuevaCita;
 }
 
+void agregarEspecialidadCita(char idMedico[]){
+    Doctor* temp = cabezaDoctor;
+    while(temp != NULL){
+        if(strcmp(temp->id_medico, idMedico)==0){
+            printf("%s %s", temp->especialidad, temp->nombre);
+            agregarEspecialidad(temp->especialidad);
+        }
+        temp= temp->sig;
+    }
+}
 /*Función que carga los datos de citas.txt a memoria*/
 void cargarDatosCitas(){
     //atributos
@@ -753,7 +774,7 @@ void cargarDatosCitas(){
     miarchivo = fopen("citas.txt", "rt");
     //verifica que el archivo exista
     if (miarchivo == NULL) {
-            printf("Error: No se ha podido crear el fichero citas.txt");
+            printf("Error: No se ha podido crear el fichero citas.txt\n");
     }else{
         //verifica que no haya llegado al final del archivo
         while (feof(miarchivo) == 0){
@@ -762,6 +783,8 @@ void cargarDatosCitas(){
             if((resultado != NULL) && (*resultado != '#')){
                 
                 nuevaCita = leerStringCita(resultado);
+                //printf("%s\n",nuevaCita->id_medico);
+                agregarEspecialidadCita(nuevaCita->id_medico);
                
                 //se añade a la lista de doctores
                 if(cabezaCita == NULL){
