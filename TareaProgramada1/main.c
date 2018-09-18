@@ -759,7 +759,6 @@ void agregarEspecialidadCita(char idMedico[]){
     Doctor* temp = cabezaDoctor;
     while(temp != NULL){
         if(strcmp(temp->id_medico, idMedico)==0){
-            printf("%s %s", temp->especialidad, temp->nombre);
             agregarEspecialidad(temp->especialidad);
         }
         temp= temp->sig;
