@@ -146,6 +146,36 @@ bool compararTelefono(char* tempTelefono){
     regfree(&regex);
 }
 
+
+bool compararHora(char* tempHora){
+    regex_t regex;
+    int reti;
+    char msgbuf[100];
+    /* Compile regular expression */
+    reti = regcomp(&regex, "^([0-9]{4})-([[0-9]{4})", REG_EXTENDED);
+    if (reti) {
+        fprintf(stderr, "Could not compile regex\n");
+        exit(1);
+    }
+    /* Execute regular expression */
+    reti = regexec(&regex, tempHora, 0, NULL, 0);
+    if (!reti) {
+        return true;
+    }
+    else if (reti == REG_NOMATCH) {
+        return false;
+    }
+    else {
+        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+        fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+        exit(1);
+    }
+
+    /* Free memory allocated to the pattern buffer by regcomp() */
+    regfree(&regex);
+}
+
+
 /*Funcion que compara el formato de fecha que se ingresa y verifica que sea compatible
  con el que maneja el sistema*/
 bool compararFecha(char* tempFecha){
@@ -562,6 +592,35 @@ bool estaPaciente(Paciente* tempPaciente, char* nombrePaciente){
     }
     return false;
 }
+
+/*Funcion que valida que el paciente no tenga una cita registrada al mismo dia en la misma hora*/
+bool horarioRepetidoPaciente(char fecha[], char id_paciente[], char hora[]){
+    Cita* temp = cabezaCita;
+    while(temp != NULL){
+        if(strcmp(temp->id_paciente, id_paciente)==0){
+            if((strcmp(temp->fechaCita, fecha)==0) && (strcmp(temp->horaCita, hora)==0)){
+                return true;
+            }
+        }
+        temp = temp->sig;
+    }
+    return false;
+}
+
+/*Funcion que valida que el doctor no tenga una cita registrada al mismo dia en la misma hora*/
+bool horarioRepetidoDoctor(char fecha[], char id_medico[], char hora[]){
+    Cita* temp = cabezaCita;
+    while(temp != NULL){
+        if(strcmp(temp->id_medico, id_medico)==0){
+            if((strcmp(temp->fechaCita, fecha)==0) && (strcmp(temp->horaCita, hora)==0)){
+                return true;
+            }
+        }
+        temp = temp->sig;
+    }
+    return false;
+}
+
 /*Funcion para agregar una cita*/
 void generarCita(){
     char doctorSolicitado[20];
@@ -596,8 +655,27 @@ void generarCita(){
             printf("Inserte un formato de fecha valido (dd-mm-aaaa): ");
             scanf("%s", &fecha);
         }
+       
         printf("Inserte la hora: ");
         scanf("%s", &hora);
+        
+        if(horarioRepetidoPaciente(fecha, cabezaPaciente->id_paciente, hora)== true){
+            printf("El paciente tiene una cita previamente registrada a esa hora en esa fecha...\n"
+                    "Ingrese un nuevo horario.\n");
+            printf("Inserte la fecha (dd-mm-aaaa): ");
+            scanf("%s", &fecha);
+            printf("Inserte la hora: ");
+            scanf("%s", &hora);
+        }
+        
+        if(horarioRepetidoDoctor(fecha, cabezaDoctor->id_medico, hora)== true){
+            printf("El doctor tiene una cita previamente registrada a esa hora en esa fecha...\n"
+                    "Ingrese un nuevo horario.\n");
+            printf("Inserte la fecha (dd-mm-aaaa): ");
+            scanf("%s", &fecha);
+            printf("Inserte la hora: ");
+            scanf("%s", &hora);
+        }
         
         /*crea la estructura cita para almacenar la informacion en el sistema de citas*/
         Cita* nuevaCita = (Cita*)malloc(sizeof(Cita));
@@ -646,21 +724,22 @@ Cita* leerStringCita(char linea[]){
     //recorre la linea de texto
     while (pch != NULL)
     {
-        //copia las palabras en el espacio correspondiente de la estructura
-        switch(contador){
-            case 0:
-                strcpy(nuevaCita->id_medico, pch);
-            case 1:
-                strcpy(nuevaCita->id_paciente, pch);
-            case 2:
-                strcpy(nuevaCita->fechaCita, pch);
-            case 3:
-                strcpy(nuevaCita->horaCita, pch);
+        if(strcmp(pch, " ")!= 0){
+            //copia las palabras en el espacio correspondiente de la estructura
+            switch(contador){
+                case 0:
+                    strcpy(nuevaCita->id_medico, pch);
+                case 1:
+                    strcpy(nuevaCita->id_paciente, pch);
+                case 2:
+                    strcpy(nuevaCita->fechaCita, pch);
+                case 3:
+                    strcpy(nuevaCita->horaCita, pch);
 
+            }
         }
         contador = contador+1;
         pch = strtok(NULL, " ,.");
-        
     }
     return nuevaCita;
 }
@@ -856,6 +935,7 @@ void imprimirMenu(){
                 agregarDoctor();
                 break;
             case 3:
+                imprimirListaCita(cabezaCita);
                 generarCita();
                 break;
             case 4:
