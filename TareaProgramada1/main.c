@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
+#include <regex.h>
 
 /******************************************************************************/
 /*ESTRUCTURAS*/
@@ -66,6 +67,7 @@ Cita* cabezaCita = NULL;
 typedef struct especialidad{
     char nombre[30];
     int cant;
+    int cantMedicos; 
     struct especialidad* sig;
 }Especialidad;
 Especialidad* cabezaEspecialidad = NULL;
@@ -84,6 +86,7 @@ bool agregarEspecialidad(char especialidad[]){
     while(temp != NULL){
         if(strcmp(temp->nombre, nueva) == 0){
             ++temp->cant;
+            ++temp->cantMedicos;
             return true;
         }
         temp = temp->sig;
@@ -91,6 +94,7 @@ bool agregarEspecialidad(char especialidad[]){
     
     strcpy(nuevaEspecialidad->nombre, especialidad);
     nuevaEspecialidad->cant = 1;
+    nuevaEspecialidad->cantMedicos = 1;
     //se añade a la lista de doctores
     if(cabezaEspecialidad == NULL){
         cabezaEspecialidad = nuevaEspecialidad;
@@ -111,8 +115,82 @@ void imprimirListaEspecialidad(Especialidad* ptr){
         ptr = ptr ->sig;
     }
 }
+
+/*Funcion que compara el formato de telefono que se introduce y verifica que sea
+ compatible con el utilizado en el sistema*/
+bool compararTelefono(char* tempTelefono){
+    regex_t regex;
+    int reti;
+    char msgbuf[100];
+    /* Compile regular expression */
+    reti = regcomp(&regex, "^([0-9]{4})-([[0-9]{4})", REG_EXTENDED);
+    if (reti) {
+        fprintf(stderr, "Could not compile regex\n");
+        exit(1);
+    }
+    /* Execute regular expression */
+    reti = regexec(&regex, tempTelefono, 0, NULL, 0);
+    if (!reti) {
+        return true;
+    }
+    else if (reti == REG_NOMATCH) {
+        return false;
+    }
+    else {
+        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+        fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+        exit(1);
+    }
+
+    /* Free memory allocated to the pattern buffer by regcomp() */
+    regfree(&regex);
+}
+
+/*Funcion que compara el formato de fecha que se ingresa y verifica que sea compatible
+ con el que maneja el sistema*/
+bool compararFecha(char* tempFecha){
+    regex_t regex;
+    int reti;
+    char msgbuf[100];
+    /* Compile regular expression */
+    reti = regcomp(&regex, "^([0-9]{1}|[0-9]{2})-([0-9]{1}|[0-9]{2})-[0-9]{4}", REG_EXTENDED);
+    if (reti) {
+        fprintf(stderr, "Could not compile regex\n");
+        exit(1);
+    }
+    /* Execute regular expression */
+    reti = regexec(&regex, tempFecha, 0, NULL, 0);
+    if (!reti) {
+        return true;
+    }
+    else if (reti == REG_NOMATCH) {
+        return false;
+    }
+    else {
+        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+        fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+        exit(1);
+    }
+
+    /* Free memory allocated to the pattern buffer by regcomp() */
+    regfree(&regex);
+}
 /******************************************************************************/
 /*FUNCIONES DOCTOR*/
+
+/*Funcion que verifica el id del doctor*/
+bool verificarIdDoc(char id[], Doctor* cabeza){
+    Doctor* temp = cabeza;
+    char idNuevo[10];
+    strcpy(idNuevo,id);
+    while(temp != NULL){
+        if(strcmp(temp->id_medico, idNuevo)){
+            return true;
+        }
+        temp = temp->sig;
+    }
+    return false;
+}
 
 /*Función que agrega elementos a la lista doctores*/
 void agregarDoctor(){
@@ -139,6 +217,11 @@ void agregarDoctor(){
     printf("Inserte el id del doctor: ");
     scanf("%s", &id_medico);
     
+    if(verificarIdDoc(id_medico, cabezaDoctor) == true){
+        printf("Error: id previamente rgistrado, ingrese un nuevo id: ");
+        scanf("%s", &id_medico);
+    }
+    
     //se copian los datos en la estructura
     strcpy(nuevoDoctor->nombre, nombre);
     strcpy(nuevoDoctor->primer_apellido, primer_apellido);
@@ -156,8 +239,6 @@ void agregarDoctor(){
         nuevoDoctor->sig = cabezaDoctor;
         cabezaDoctor = nuevoDoctor;
     }
-    
-    agregarEspecialidad(nuevoDoctor->especialidad);
     printf("El médico se añadió exitosamente...\n");   
 }
 
@@ -307,6 +388,10 @@ void agregarPaciente(){
     scanf("%s", &apellidoPaciente);
     printf("Ingrese el teléfono del paciente (respete el formato ####-####: ");
     scanf("%s", &telefono);
+    while(compararTelefono(telefono)==false){
+        printf("Inserte un formato de telefono valido (####-####): ");
+        scanf("%s", &telefono);
+    }
     printf("Ingrese la edad en años del paciente: ");
     scanf("%s", &edad);
     printf("Ingrese el id del paciente: ");
@@ -496,19 +581,21 @@ void generarCita(){
         strcpy(id_paciente, cabezaPaciente->id_paciente);
     }
     /*Verifica que el doctor se encuentre en el sistema, en caso de no estarlo lo crea*/
-    printf("Inserte el nombre del doctor:");
+    printf("Inserte el nombre del doctor: ");
     scanf("%s", &doctorSolicitado);
     if (estaDoctor(cabezaDoctor, doctorSolicitado,1)==false){
         printf("El doctor no se encuentra registrado\n");
-        //agregarDoctor();
     }else{
         if (estaDoctor(cabezaDoctor, doctorSolicitado,0)==true){
             strcpy(id_doctor, cabezaDoctor->id_medico);
-            
-            
+            agregarEspecialidad(cabezaDoctor->especialidad);
         }
-        printf("Inserte la fecha de la cita: ");
+        printf("Inserte la fecha (dd-mm-aaaa): ");
         scanf("%s", &fecha);
+        while(compararFecha(fecha)==false){
+            printf("Inserte un formato de fecha valido (dd-mm-aaaa): ");
+            scanf("%s", &fecha);
+        }
         printf("Inserte la hora: ");
         scanf("%s", &hora);
         
@@ -678,7 +765,31 @@ void promedioDoctores(){
 
 /*Funcion que muestra el promedio de especialidades*/
 void promedioEspecialidad(){
-    
+    /*Se crean la variables para almacenar los datos de la especialidad con más citas*/
+    int cantCitas = 0;
+    char nombreEspecialidad[30];
+    /*Se crean las variables para almacenar los datos del promedio de citas de esa especialidad*/
+    int totalMedicos = 0;
+    int promedio = 0;
+    /*Se crea el puntero*/
+    Especialidad* ptr = cabezaEspecialidad;
+    /*Se crea el ciclo para recorrer la lista*/
+    while (ptr!= NULL){
+        /*Compara si la cantidad de citas en especialidad es mayor a la variable*/
+        if(ptr->cant > cantCitas){
+            /*Si es mayor a la variable ingresa el nombre, la cantidad de citas y la cantidad de Medicos*/
+            cantCitas = ptr->cant;
+            strcpy(nombreEspecialidad, ptr->nombre);
+            totalMedicos = ptr->cantMedicos;
+        }
+        /*Pasa al siguiente elemento de la lista*/
+        ptr = ptr->sig;
+    }
+    /*Cuando ya se recorrió toda la lista se procede a hacer el promedio*/
+    promedio = cantCitas/totalMedicos;
+    /*SE IMPRIME EN CONSOLA EL RESULTADO*/
+    printf("Especialidad con más citas es:  %s  \n" , nombreEspecialidad);
+    printf("Promedio de citas de la especialidad es: %d \n", promedio);
 }
 
 /*Función que imprime el menu de estadisticas*/
@@ -698,7 +809,7 @@ void imprimirMenuEstadisticas(){
             promedioDoctores();
             break;
         case 2:
-            printf("No disponible/n");
+            promedioEspecialidad();
             break;
         case 3:
             promedioPacientes();
