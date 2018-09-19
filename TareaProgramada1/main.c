@@ -7,8 +7,6 @@
 /* 
  * File:   main.c
  * Author: Maria de la Paz Bloise, Ricardo Oliver y Anjelica Tristani
- *
- * Created on 14 de septiembre de 2018, 03:20 PM
  */
 
 #include <stdio.h>
@@ -21,16 +19,18 @@
 /******************************************************************************/
 /*ESTRUCTURAS*/
 
+/*Estructura para crear la lista enlazada de pacientes*/
 typedef struct paciente{
     char id_paciente[30];
     char nombre[30];
     char primer_apellido[30];
-    char edad[30]; /*edad debe ser en años*/
-    char telefono[30]; /*formato debe ser ####-####*/
+    char edad[30]; 
+    char telefono[30];
     struct paciente* sig;
 } Paciente;
 Paciente* cabezaPaciente = NULL;
 
+/*Estructura para crear la lista enlazada de medicos*/
 typedef struct doctor{
     char id_medico[30];
     char nombre[30];
@@ -42,19 +42,7 @@ typedef struct doctor{
 } Doctor;
 Doctor* cabezaDoctor = NULL;
 
-typedef struct tiempo{
-    int hora;
-    int minutos;
-    /*deben ser solo de las 08.00 a 19.00*/
-}Tiempo;
-
-typedef struct fecha{
-    int dia;
-    int mes;
-    int anio;
-    /*formato debe ser dd-mm-aaaa*/
-}Fecha;
-
+/*Estructura para crear la lista enlazada de citas*/
 typedef struct cita{
     char id_medico[30];
     char id_paciente[30];
@@ -64,6 +52,7 @@ typedef struct cita{
 }Cita;
 Cita* cabezaCita = NULL;
 
+/*Estructura para crear la lista enlazada de especialidades*/
 typedef struct especialidad{
     char nombre[30];
     int cant;
@@ -75,14 +64,17 @@ Especialidad* cabezaEspecialidad = NULL;
 /******************************************************************************/
 /*FUNCIONES ESPECIALIDAD*/
 
-/*Funcion que agrega la especialidad en la lista con la cantidad correcta*/
+/*
+ * Funcion que agrega la especialidad en la lista enlazada, aumenta la cantidad si ya
+ * existe y aumenta el total de doctores
+ * Entradas: el nombre de la especialidad
+ * Salidas: true (si la especialidad ya existe) y false (si la especialidad no existe)
+ */
 bool agregarEspecialidad(char especialidad[]){
-    //estructura doctor que se va a agregar a la lista
-    char nueva[30];
-    Especialidad* nuevaEspecialidad = (Especialidad*)malloc(sizeof(Especialidad));
-    Especialidad* temp = cabezaEspecialidad;
+    char nueva[30]; //arreglo donde se almacena el nombre de especialidad
+    Especialidad* nuevaEspecialidad = (Especialidad*)malloc(sizeof(Especialidad)); //reserva espacio de memoria
+    Especialidad* temp = cabezaEspecialidad; //temporal para recorrer la lista especialidad
     strcpy(nueva, especialidad);
-
     while(temp != NULL){
         if(strcmp(temp->nombre, nueva) == 0){
             ++temp->cant;
@@ -91,11 +83,11 @@ bool agregarEspecialidad(char especialidad[]){
         }
         temp = temp->sig;
     }
-    
+    //Se agrega la especialidad en la lista si no existe previamente
     strcpy(nuevaEspecialidad->nombre, especialidad);
     nuevaEspecialidad->cant = 1;
     nuevaEspecialidad->cantMedicos = 1;
-    //se añade a la lista de doctores
+
     if(cabezaEspecialidad == NULL){
         cabezaEspecialidad = nuevaEspecialidad;
         cabezaEspecialidad->sig = NULL;
@@ -107,7 +99,11 @@ bool agregarEspecialidad(char especialidad[]){
     return false;
 }
 
-/*Funcion que devuelve el largo de la lista especialidad*/
+/*
+ * Funcion que devuelve el largo de la lista especialidad
+ * Entradas: la cabeza de la lista especialidad
+ * Salidas: Imprime en consola los atributos de la lista
+ */
 void imprimirListaEspecialidad(Especialidad* ptr){
     //recorre la lista hasta que se acaben las estructuras
     while (ptr != NULL){
@@ -116,19 +112,24 @@ void imprimirListaEspecialidad(Especialidad* ptr){
     }
 }
 
-/*Funcion que compara el formato de telefono que se introduce y verifica que sea
- compatible con el utilizado en el sistema*/
+
+/*
+ * Funcion que compara el formato de telefono que se introduce y verifica que sea
+ * compatible con el utilizado en el sistema
+ * Entrada: un arreglo de char con el telefono que se ingresó desde consola
+ * Salida: true (si el formato es correcto) y false (si el formato es incorrecto) 
+ */
 bool compararTelefono(char* tempTelefono){
     regex_t regex;
     int reti;
-    char msgbuf[100];
-    /* Compile regular expression */
+    char mensaje[100];
+    //Compila la expresion regular dentro de los limitantes
     reti = regcomp(&regex, "^([0-9]{4})-([[0-9]{4})$", REG_EXTENDED);
     if (reti) {
-        fprintf(stderr, "Could not compile regex\n");
+        fprintf(stderr, "No se pudo compilar\n");
         exit(1);
     }
-    /* Execute regular expression */
+    //Ejecuta la expresion regular
     reti = regexec(&regex, tempTelefono, 0, NULL, 0);
     if (!reti) {
         return true;
@@ -137,28 +138,31 @@ bool compararTelefono(char* tempTelefono){
         return false;
     }
     else {
-        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
-        fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+        regerror(reti, &regex, mensaje, sizeof(mensaje));
+        fprintf(stderr, "Fallo en la compilacion: %s\n", mensaje);
         exit(1);
     }
-
-    /* Free memory allocated to the pattern buffer by regcomp() */
+    //Libera el espacio en memoria
     regfree(&regex);
 }
 
-/*Funcion que compara el formato de fecha que se ingresa y verifica que sea compatible
- con el que maneja el sistema*/
+/*
+ * Funcion que compara el formato de la fecha que se introduce y verifica que sea
+ * compatible con el utilizado en el sistema
+ * Entrada: un arreglo de char con la fecha que se ingresó desde consola
+ * Salida: true (si el formato es correcto) y false (si el formato es incorrecto) 
+ */
 bool compararFecha(char* tempFecha){
     regex_t regex;
     int reti;
-    char msgbuf[100];
-    /* Compile regular expression */
+    char mensaje[100];
+    //Compila la expresion regular dentro de los limitantes
     reti = regcomp(&regex, "^([0-9]{1}|[0-9]{2})-([0-9]{1}|[0-9]{2})-([0-9]{4})$", REG_EXTENDED);
     if (reti) {
         fprintf(stderr, "Could not compile regex\n");
         exit(1);
     }
-    /* Execute regular expression */
+    //Ejecuta la expresion regular
     reti = regexec(&regex, tempFecha, 0, NULL, 0);
     if (!reti) {
         return true;
@@ -167,24 +171,29 @@ bool compararFecha(char* tempFecha){
         return false;
     }
     else {
-        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
-        fprintf(stderr, "Regex match failed: %s\n", msgbuf);
+        regerror(reti, &regex, mensaje, sizeof(mensaje));
+        fprintf(stderr, "Regex match failed: %s\n", mensaje);
         exit(1);
     }
-
-    /* Free memory allocated to the pattern buffer by regcomp() */
+    //Libera el espacio en memoria
     regfree(&regex);
 }
+
+
 /******************************************************************************/
 /*FUNCIONES DOCTOR*/
 
-/*Funcion que verifica el id del doctor*/
+/*
+ * Funcion que verifica el id del doctor
+ * Entradas: el id del nuevo doctor y la cabeza de la lista doctor
+ * Salidas: true (si existe un doctor con ese id) y false (si el id esta disponible)
+ */
 bool verificarIdDoc(char id[], Doctor* cabeza){
     Doctor* temp = cabeza;
-    char idNuevo[10];
+    char idNuevo[20];
     strcpy(idNuevo,id);
     while(temp != NULL){
-        if(strcmp(temp->id_medico, idNuevo)){
+        if(strcmp(temp->id_medico, idNuevo)==0){
             return true;
         }
         temp = temp->sig;
@@ -192,7 +201,11 @@ bool verificarIdDoc(char id[], Doctor* cabeza){
     return false;
 }
 
-/*Función que agrega elementos a la lista doctores*/
+/*
+ * Función que agrega elementos a la lista doctores
+ * Entradas: no tiene entradas
+ * Salidas: no tiene salidas
+ */
 void agregarDoctor(){
     //atributos para crear la estructura doctor
     char id_medico[30];
@@ -200,7 +213,6 @@ void agregarDoctor(){
     char primer_apellido[30];
     char especialidad[30];
     char turno[10];
-    char cantCitas[10];
     
     //estructura doctor que se va a agregar a la lista
     Doctor* nuevoDoctor = (Doctor*)malloc(sizeof(Doctor));
@@ -212,13 +224,17 @@ void agregarDoctor(){
     scanf("%s", &primer_apellido);
     printf("Inserte la especialidad del doctor: ");
     scanf("%s", &especialidad);
-    printf("Inserte el turno del doctor: ");
+    printf("Elija el número de la opción para el turno del doctor\n");
+    printf("    1. Día\n");
+    printf("    2. Tarde\n");
+    printf("    3. Todo el día\n");
+    printf("Respuesta: ");
     scanf("%s", &turno);
     printf("Inserte el id del doctor: ");
     scanf("%s", &id_medico);
     
     if(verificarIdDoc(id_medico, cabezaDoctor) == true){
-        printf("Error: id previamente rgistrado, ingrese un nuevo id: ");
+        printf("Error: id previamente registrado, ingrese un nuevo id: ");
         scanf("%s", &id_medico);
     }
     
@@ -242,7 +258,11 @@ void agregarDoctor(){
     printf("El médico se añadió exitosamente...\n");   
 }
 
-/*Función para imprimir la lista de doctores*/
+/*
+ * Funcion que devuelve el largo de la lista doctores
+ * Entradas: la cabeza de la lista doctores
+ * Salidas: Imprime en consola los atributos de la lista
+ */
 void imprimirListaDoctor(Doctor* ptr){
     //recorre la lista hasta que se acaben las estructuras
     while (ptr != NULL){
@@ -252,7 +272,11 @@ void imprimirListaDoctor(Doctor* ptr){
     }
 }
 
-/*Función para guardar datos en medicos.txt*/
+/*
+ * Función para guardar datos en el txt correspondiente (medicos.txt)
+ * Entrada: la cabeza de la lista doctores
+ * Salidas: no tiene salidas
+ */
 void guardarDatosDoctores(Doctor* cabeza){
     //atributos para crear el archivo txt
     Doctor* temp = cabeza;
@@ -264,7 +288,7 @@ void guardarDatosDoctores(Doctor* cabeza){
     while(temp != NULL){
         if(strcmp(temp->nombre, " ") != 0){
             fprintf(miarchivo, "%s %s %s %s %s %s\r\n", temp->nombre,temp->primer_apellido,temp->especialidad,
-                temp->turno,temp->id_medico, temp->cantCitas);
+                temp->turno,temp->id_medico, temp->cantCitas); //escribe en el txt
         }
         temp = temp->sig;
     }
@@ -272,13 +296,16 @@ void guardarDatosDoctores(Doctor* cabeza){
     fclose(miarchivo);
 }
 
-/*Funcion que recorre la linea de texto y separa las palabras cuando encuentra un espacio*/
-/*Salida: estructura doctor*/
+/*
+ * Funcion que recorre la linea de texto y separa las palabras cuando encuentra un espacio
+ * Entradas: la linea del txt
+ * Salida: estructura doctor con los datos extraidos del txt
+ */
 Doctor* leerStringDoctor(char linea[]){
     //atributos
     Doctor* nuevoDoctor = (Doctor*)malloc(sizeof(Doctor));
     char * pch;
-    pch = strtok(linea," ,.-");
+    pch = strtok(linea," ,.-"); //separa la linea al encontrar alguna de los simbolos
     int contador = 0;
     
     //recorre la linea de texto
@@ -307,7 +334,11 @@ Doctor* leerStringDoctor(char linea[]){
     return nuevoDoctor;
 }
 
-/*Función que carga los datos de medicos.txt a memoria*/
+/*
+ * Función que carga los datos de medicos.txt a memoria.
+ * Entradas: no tiene entradas.
+ * Salidas: no tiene salidas.
+ */
 void cargarDatosDoctores(){
     //atributos
     FILE* miarchivo;
@@ -316,16 +347,17 @@ void cargarDatosDoctores(){
     miarchivo = fopen("medicos.txt", "rt");
     //verifica que el archivo exista
     if (miarchivo == NULL) {
-            printf("Error: No se ha podido crear el fichero doctores.txt\n");
-    }else{
-        //verifica que no haya llegado al final del archivo
-        while (feof(miarchivo) == 0){
-            resultado = fgets(linea, 256, miarchivo);
+            printf("Archivo doctores.txt vacio\n");
+    }else{ 
+        while (feof(miarchivo) == 0){ //verifica que no haya llegado al final del archivo
+           
+            resultado = fgets(linea, 256, miarchivo); //extrae la linea del txt
             Doctor* nuevoDoctor = (Doctor*)malloc(sizeof(Doctor));
-            if((resultado != NULL) && (*resultado != '#')){
+            if((resultado != NULL)){
                 
                 nuevoDoctor = leerStringDoctor(resultado);
                 agregarEspecialidad(nuevoDoctor->especialidad);
+                
                 //se añade a la lista de doctores
                 if(cabezaDoctor == NULL){
                     cabezaDoctor = nuevoDoctor;
@@ -339,38 +371,48 @@ void cargarDatosDoctores(){
     }
 }
 
-/*Funcion que devuelve el largo de la lista doctores*/
+/*
+ * Funcion que devuelve el largo de la lista doctor
+ * Entradas: la cabeza de la lista doctor
+ * Salidas: un entero con el largo de la lista doctor
+ */
 int largoDoctores(Doctor* cabeza){
-    int largo = 0;
+    int largo = 0; //variable para almacenar el largo
     Doctor* temp = cabeza;
-    while(temp != NULL){
+    
+    while(temp != NULL){ //ciclo que recorre la lista
         ++largo;
         temp = temp->sig;
     }
     return largo;
 }
 
-void aumentarCita(Doctor* actual){
-    
-   
-}
 /******************************************************************************/
 /*FUNCIONES PACIENTE*/
 
-/*Funcion que verifica el id del paciente*/
+/*
+ * Funcion que verifica el id del paciente
+ * Entradas: el id del nuevo paciente y la cabeza de la lista doctor
+ * Salidas: true (si existe un paciente con ese id) y false (si el id esta disponible)
+ */
 bool verificarId(char id[], Paciente* cabeza){
     Paciente* temp = cabeza;
     char idNuevo[10];
     strcpy(idNuevo,id);
     while(temp != NULL){
-        if(strcmp(temp->id_paciente, idNuevo)){
+        if(strcmp(temp->id_paciente, idNuevo)==0){
             return true;
         }
         temp = temp->sig;
     }
     return false;
 }
-/*Funcion que agrega un paciente a la lista de pacientes*/
+
+/*
+ * Función que agrega elementos a la lista paciente
+ * Entradas: no tiene entradas
+ * Salidas: no tiene salidas
+ */
 void agregarPaciente(){
     //atributos
     char nombrePaciente[30];
@@ -386,10 +428,10 @@ void agregarPaciente(){
     scanf("%s", &nombrePaciente);
     printf("Ingrese el apellido del paciente: ");
     scanf("%s", &apellidoPaciente);
-    printf("Ingrese el teléfono del paciente (respete el formato ####-####: ");
+    printf("Ingrese el teléfono del paciente (respete el formato ####-####): ");
     scanf("%s", &telefono);
     
-    while(compararTelefono(telefono)==false){
+    while(compararTelefono(telefono)==false){ //verifica el formato del telefono (####-####)
         printf("Inserte un formato de telefono valido (####-####): ");
         scanf("%s", &telefono);
     }
@@ -399,7 +441,7 @@ void agregarPaciente(){
     printf("Ingrese el id del paciente: ");
     scanf("%s", &id_paciente);
     
-    if(verificarId(id_paciente, cabezaPaciente)){
+    if(verificarId(id_paciente, cabezaPaciente)){ //verifica la existencia del id
         printf("Error: id previamente rgistrado, ingrese un nuevo id: ");
         scanf("%s", &id_paciente);
     }
@@ -425,7 +467,11 @@ void agregarPaciente(){
     printf("El paciente se añadió exitosamente...\n");
 }
 
-/*Función para imprimir la lista de doctores*/
+/*
+ * Función para imprimir la lista de pacientes
+ * Entrada: la cabeza de la lista paciente
+ * Salida: imprime en consola los atributos de la lista paciente
+ */
 void imprimirListaPaciente(Paciente* ptr){
     //recorre la lista hasta que se acaben las estructuras
     while (ptr != NULL){
@@ -435,7 +481,11 @@ void imprimirListaPaciente(Paciente* ptr){
     }
 }
 
-/*Función para guardar datos en pacientes.txt*/
+/*
+ * Función que carga los datos de pacientes.txt a memoria.
+ * Entradas: la cabeza de la lista pacientes.
+ * Salidas: no tiene salidas.
+ */
 void guardarDatosPaciente(Paciente* cabeza){
     //atributos para crear el archivo txt
     Paciente* temp = cabeza;
@@ -453,8 +503,11 @@ void guardarDatosPaciente(Paciente* cabeza){
     fclose(miarchivo);
 }
 
-/*Funcion que recorre la linea de texto y separa las palabras cuando encuentra un espacio*/
-/*Salida: estructura paciente*/
+/*
+ * Funcion que separa la linea del txt para generar la nueva estructura paciente
+ * Entradas: arreglo de char con la linea del txt
+ * Salida: estructura paciente
+ */
 Paciente* leerStringPaciente(char linea[]){
     //atributos
     Paciente* nuevoPaciente = (Paciente*)malloc(sizeof(Paciente));
@@ -486,7 +539,11 @@ Paciente* leerStringPaciente(char linea[]){
     return nuevoPaciente;
 }
 
-/*Función que carga los datos de medicos.txt a memoria*/
+/*
+ * Función que carga los datos de pacientes.txt a memoria.
+ * Entradas: no tiene entradas.
+ * Salidas: no tiene salidas.
+ */
 void cargarDatosPacientes(){
     //atributos
     FILE* miarchivo;
@@ -495,7 +552,7 @@ void cargarDatosPacientes(){
     miarchivo = fopen("pacientes.txt", "rt");
     //verifica que el archivo exista
     if (miarchivo == NULL) {
-            printf("Error: No se ha podido crear el fichero pacientes.txt\n");
+            printf("Archivo pacientes.txt vacio\n");
     }else{
         //verifica que no haya llegado al final del archivo
         while (feof(miarchivo) == 0){
@@ -518,7 +575,11 @@ void cargarDatosPacientes(){
     }
 }
 
-/*Funcion que devuelve el largo de la lista doctores*/
+/*
+ * Funcion que devuelve el largo de la lista paciente
+ * Entradas: la cabeza de la lista paciemte
+ * Salidas: un entero con el largo de la lista pacientes
+ */
 int largoPacientes(Paciente* cabeza){
     int largo = 0;
     Paciente* temp = cabeza;
@@ -531,41 +592,53 @@ int largoPacientes(Paciente* cabeza){
 /******************************************************************************/
 /*FUNCIONES CITA*/
 
-/*Funcion para buscar al doctor en el sistema*/
-bool estaDoctor(Doctor* Doctor, char* nombreDoctor, int verificar){
-        while (Doctor != NULL){
-        if (strcmp(Doctor->nombre, nombreDoctor)==0){
+/*
+ * Funcion para buscar al doctor en el sistema
+ * Entradas: la cabeza de la lista doctor, el nombre del doctor, un entero para
+ * verificar si se desea aumentar la cantidad de citas
+ * Salidas: true (si el doctor es encontrado) y false (si el doctor no existe) 
+ */
+bool estaDoctor(char* nombreDoctor, int verificar){
+    Doctor* temp = cabezaDoctor;
+        while (temp != NULL){
+        if (strcmp(temp->nombre, nombreDoctor)==0){
             if(verificar ==0){
-               int num = (int)Doctor->cantCitas[0]-47;
+               int num = (int)temp->cantCitas[0]-47;
                 char c = '0'+num;
-                Doctor->cantCitas[0]= c;
+                temp->cantCitas[0]= c;
                 return true;
             }
             else{
                 return true;
             } 
         }
-        else{
-            Doctor=Doctor->sig;
-        }
+        temp=temp->sig;
     }
     return false;
 }
 
-/*Funcion para buscar el paciente en el sistema*/
+/*
+ * Funcion para buscar al paciente en el sistema
+ * Entradas: la cabeza de la lista pacientes, el nombre del paciente
+ * Salidas: true (si el paciente es encontrado) y false (si el paciente no existe) 
+ */
 bool estaPaciente(Paciente* tempPaciente, char* nombrePaciente){
     while (tempPaciente != NULL){
         if (strcmp(tempPaciente->nombre, nombrePaciente)==0){
             return true;
         }
-        else{
-            tempPaciente=tempPaciente->sig;
-        }
+        tempPaciente=tempPaciente->sig;
     }
     return false;
 }
 
-/*Funcion que valida que el paciente no tenga una cita registrada al mismo dia en la misma hora*/
+/*
+ * Funcion que valida que el paciente no tenga una cita registrada al mismo dia en la misma hora
+ * Entradas: un arreglo de char para la fecha, un arreglo de char para el id del paciente
+ * y un arreglo de char con la hora
+ * Salidas: true (si el paciente tiene una cita previa en esa hora y en esa fecha) y
+ * false (si el paciente tiene el horario disponible)
+ */
 bool horarioRepetidoPaciente(char fecha[], char id_paciente[], char hora[]){
     Cita* temp = cabezaCita;
     while(temp != NULL){
@@ -579,7 +652,13 @@ bool horarioRepetidoPaciente(char fecha[], char id_paciente[], char hora[]){
     return false;
 }
 
-/*Funcion que valida que el doctor no tenga una cita registrada al mismo dia en la misma hora*/
+/*
+ * Funcion que valida que el doctor no tenga una cita registrada al mismo dia en la misma hora
+ * Entradas: un arreglo de char para la fecha, un arreglo de char para el id del doctor
+ * y un arreglo de char con la hora
+ * Salidas: true (si el doctor tiene una cita previa en esa hora y en esa fecha) y
+ * false (si el doctor tiene el horario disponible)
+ */
 bool horarioRepetidoDoctor(char fecha[], char id_medico[], char hora[]){
     Cita* temp = cabezaCita;
     while(temp != NULL){
@@ -593,17 +672,16 @@ bool horarioRepetidoDoctor(char fecha[], char id_medico[], char hora[]){
     return false;
 }
 
+/*
+ * Funcion que valida que las horas de las citas sean compatibles con el horario del doctor
+ * Entradas: un arreglo char con el turno y un arreglo char con la hora
+ * Salida: true (si el horario es compatible) y false (si el horario no es compatible)
+ */
 bool validarTurno(char turno[], char hora[]){
     int numero;
     int opcion;
     numero = atoi(hora);
-    if(strcmp(turno, "dia")==0){
-        opcion = 1;
-    }else if(strcmp(turno, "tarde")==0){
-        opcion = 2;
-    }else{
-        opcion = 3;
-    }
+    opcion = atoi(turno);
     switch(opcion){
         case 1:
             if((numero>=8) && (numero<=12)){
@@ -620,8 +698,14 @@ bool validarTurno(char turno[], char hora[]){
     }
     return false;
 }
-/*Funcion para agregar una cita*/
+
+/*
+ * Funcion para agregar una cita a la lista citas
+ * Entradas: no tiene entradas
+ * Salidas: no tiene salidas
+ */
 void generarCita(){
+    //atributos
     char doctorSolicitado[20];
     char nombrePaciente[20];
     char id_doctor[30];
@@ -629,42 +713,48 @@ void generarCita(){
     char fecha[100];
     char hora[100];
     
-    /*verifica que el paciente este en el sistema, en caso de no estarlo debe crear al usuario*/
+    //verifica que el paciente este en el sistema, en caso de no estarlo debe crear al usuario
     printf("Inserte el nombre del paciente: ");
     scanf("%s", &nombrePaciente);
+    
     if (estaPaciente(cabezaPaciente, nombrePaciente)==false){
         printf("Paciente no registrado, ingrese su información personal...\n");
         agregarPaciente();
     }else{
         strcpy(id_paciente, cabezaPaciente->id_paciente);
+        printf("ID DEL PACIENTE %s\n",cabezaPaciente->id_paciente);
     }
-    /*Verifica que el doctor se encuentre en el sistema, en caso de no estarlo lo crea*/
+    //Verifica que el doctor se encuentre en el sistema, en caso de no estarlo lo crea
     printf("Inserte el nombre del doctor: ");
     scanf("%s", &doctorSolicitado);
+    
     if (estaDoctor(cabezaDoctor, doctorSolicitado,1)==false){
         printf("El doctor no se encuentra registrado\n");
     }else{
+        
         if (estaDoctor(cabezaDoctor, doctorSolicitado,0)==true){
+            printf("ID DEL MEDICO %s\n",cabezaDoctor->id_medico);
+            
             strcpy(id_doctor, cabezaDoctor->id_medico);
-            agregarEspecialidad(cabezaDoctor->especialidad);
+            agregarEspecialidad(cabezaDoctor->especialidad); //agrega la especialidad a la lista
         }
         printf("Inserte la fecha (dd-mm-aaaa): ");
         scanf("%s", &fecha);
-        while(compararFecha(fecha)==false){
+        while(compararFecha(fecha)==false){ //verifica el formato de la fecha
             printf("Inserte un formato de fecha valido (dd-mm-aaaa): ");
             scanf("%s", &fecha);
         }
         printf("Inserte la hora: ");
         scanf("%s", &hora);
         
-        int largo = strlen(hora);
-        
-        while(largo != 2){
+        int largo = strlen(hora); //verifica el formato de la hora
+        while(largo != 2){ //de estar el formato incorrecto solicita la hora nuevamente
             printf("Inserte un formato de hora válido (##): ");
             scanf("%s", &hora);
             largo = strlen(hora);
         }
         
+        //verifica que el paciente no tenga una cita previa en el horario que ingresa
         if(horarioRepetidoPaciente(fecha, cabezaPaciente->id_paciente, hora)== true){
             printf("El paciente tiene una cita previamente registrada a esa hora en esa fecha...\n"
                     "Ingrese un nuevo horario.\n");
@@ -673,7 +763,7 @@ void generarCita(){
             printf("Inserte la hora: ");
             scanf("%s", &hora);
         }
-        
+        //verifica que le doctor no tenga una cita previa en el horario que ingresa
         if(horarioRepetidoDoctor(fecha, cabezaDoctor->id_medico, hora)== true){
             printf("El doctor tiene una cita previamente registrada a esa hora en esa fecha...\n"
                     "Ingrese un nuevo horario.\n");
@@ -682,13 +772,13 @@ void generarCita(){
             printf("Inserte la hora: ");
             scanf("%s", &hora);
         }
-        
+        //valida que la hora que se ingresa corresponda al horario del doctor
         if(validarTurno(cabezaDoctor->turno, hora)==false){
             printf("El horario del doctor no es compatible con la hora\nIngrese otro horario: ");
             scanf("%s", &hora);
         }
         
-        /*crea la estructura cita para almacenar la informacion en el sistema de citas*/
+        //crea la estructura cita para almacenar la informacion en el sistema de citas
         Cita* nuevaCita = (Cita*)malloc(sizeof(Cita));
         
         strcpy(nuevaCita->fechaCita, fecha);
@@ -704,11 +794,16 @@ void generarCita(){
             nuevaCita->sig = cabezaCita;
             cabezaCita = nuevaCita;
         }
+        //mensaje de salida
         printf("Cita registrada\n");
     }
 }
 
-/*Funcion que guarda los elementos de la lista citas en el archivo citas.txt*/
+/*
+ * Funcion que guarda los elementos de la lista citas en el archivo citas.txt
+ * Entradas: la cabeza de la lista cita
+ * Salidas: no tiene salidas
+ */
 void guardarCitas(Cita* cabeza){
     FILE* miarchivo;
     char* nombrearchivo = "citas.txt";
@@ -723,8 +818,11 @@ void guardarCitas(Cita* cabeza){
     fclose(miarchivo);
 }
 
-/*Funcion que recorre la linea de texto y separa las palabras cuando encuentra un espacio*/
-/*Salida: estructura cita*/
+/*
+ * Funcion que recorre la linea de texto y separa las palabras cuando encuentra un espacio
+ * Entradas: la linea del txt
+ * Salida: estructura cita con los datos extraidos del txt
+ */
 Cita* leerStringCita(char linea[]){
     //atributos
     Cita* nuevaCita = (Cita*)malloc(sizeof(Cita));
@@ -755,16 +853,26 @@ Cita* leerStringCita(char linea[]){
     return nuevaCita;
 }
 
+/*
+ * Funcion que agrega la especialidad a la lista a la hora de cargar los datos de cita
+ * Entradas: id del medico de la cita
+ * Salidas: no tiene salidas  
+ */
 void agregarEspecialidadCita(char idMedico[]){
     Doctor* temp = cabezaDoctor;
     while(temp != NULL){
-        if(strcmp(temp->id_medico, idMedico)==0){
-            agregarEspecialidad(temp->especialidad);
+        if(strcmp(temp->id_medico, idMedico)==0){ //encuentra el doctor en la lista
+            agregarEspecialidad(temp->especialidad); //agrega la especialidad
         }
         temp= temp->sig;
     }
 }
-/*Función que carga los datos de citas.txt a memoria*/
+
+/*
+ * Función que carga los datos de citas.txt a memoria.
+ * Entradas: no tiene entradas.
+ * Salidas: no tiene salidas.
+ */
 void cargarDatosCitas(){
     //atributos
     FILE* miarchivo;
@@ -773,16 +881,15 @@ void cargarDatosCitas(){
     miarchivo = fopen("citas.txt", "rt");
     //verifica que el archivo exista
     if (miarchivo == NULL) {
-            printf("Error: No se ha podido crear el fichero citas.txt\n");
+            printf("Archivo citas.txt vacio\n");
     }else{
         //verifica que no haya llegado al final del archivo
         while (feof(miarchivo) == 0){
             resultado = fgets(linea, 256, miarchivo);
             Cita* nuevaCita = (Cita*)malloc(sizeof(Cita));
-            if((resultado != NULL) && (*resultado != '#')){
+            if((resultado != NULL)){
                 
                 nuevaCita = leerStringCita(resultado);
-                //printf("%s\n",nuevaCita->id_medico);
                 agregarEspecialidadCita(nuevaCita->id_medico);
                
                 //se añade a la lista de doctores
@@ -798,7 +905,11 @@ void cargarDatosCitas(){
     }
 }
 
-/*Función para imprimir la lista de citas*/
+/*
+ * Funcion que devuelve el largo de la lista citas
+ * Entradas: la cabeza de la lista cita
+ * Salidas: Imprime en consola los atributos de la lista
+ */
 void imprimirListaCita(Cita* ptr){
     //recorre la lista hasta que se acaben las estructuras
     while (ptr != NULL){
@@ -808,7 +919,11 @@ void imprimirListaCita(Cita* ptr){
     }
 }
 
-/*Funcion que devuelve el largo de la lista citas*/
+/*
+ * Funcion que devuelve el largo de la lista cita
+ * Entradas: la cabeza de la lista cita
+ * Salidas: un entero con el largo de la lista cita
+ */
 int largoCitas(Cita* cabeza){
     int largo = 0;
     Cita* temp = cabeza;
@@ -821,7 +936,11 @@ int largoCitas(Cita* cabeza){
 /******************************************************************************/
 /*FUNCIONES ESTADISTICAS*/
 
-/*Funcion que genera el promedio de pacientes con respecto a citas*/
+/*
+ * Funcion que genera el promedio de pacientes con respecto a citas
+ * Entradas: no tiene entradas
+ * Slidas: no tiene salidas
+ */
 void promedioPacientes(){
     int pacientes = largoPacientes(cabezaPaciente);
     int citas = largoCitas(cabezaCita);
@@ -829,10 +948,15 @@ void promedioPacientes(){
     printf("Promedio de citas por paciente es %f \n", promedio);
 }
 
-/*Funcion que muestra el médico con más citas y el promedio de citas entre doctores*/
+/*
+ * Funcion que muestra el médico con más citas y el promedio de citas entre doctores
+ * Entradas: no tiene entradas
+ * Salidas: no tiene salidas
+ */
 void promedioDoctores(){
-    int mayor = -1;
-    Doctor* temp = cabezaDoctor;
+    int mayor = 0; //limite para buscar el mayor
+    Doctor* temp = cabezaDoctor; //recorre la lista de doctores
+    //atributos
     char nombre[30];
     char apellido[30];
     char especialidad[30];
@@ -840,9 +964,8 @@ void promedioDoctores(){
     
     while(temp != NULL){
         int num = (int)(temp->cantCitas[0]-48); //convierte el char a un int
-        
-        //printf("Numero: %d y nombre: %s\n", num, temp->nombre);
-        if(num > mayor){
+
+        if(num > mayor){ //si el numero de citas que se encuentra es mayor, se actualizan los datos
             strlcpy(nombre, temp->nombre, sizeof(nombre));
             strlcpy(apellido, temp->primer_apellido,sizeof(apellido));
             strlcpy(especialidad, temp->especialidad, sizeof(especialidad));
@@ -850,12 +973,12 @@ void promedioDoctores(){
         }
         temp = temp->sig;
     }
-    
+    //calcula promedio
     int citas = largoCitas(cabezaCita);
     int doc = largoDoctores(cabezaDoctor);
     promedio = citas/doc;
     
-    //Valida si existen dolores con citas
+    //Valida si existen doctores con citas
     if(mayor>0){
         printf("Médico  con  más  citas  es %s  %s, especialista en %s. Tiene %d cita(as).\n", nombre, apellido, especialidad, mayor);
         printf("Promedio general es : %d citas por médico\n", promedio);
@@ -864,7 +987,11 @@ void promedioDoctores(){
     }
 }
 
-/*Funcion que muestra el promedio de especialidades*/
+/*
+ * Funcion que muestra el promedio de especialidades
+ * Entradas: no tiene entradas
+ * Salidas: no tiene salidas
+ */
 void promedioEspecialidad(){
     /*Se crean la variables para almacenar los datos de la especialidad con más citas*/
     int cantCitas = 0;
@@ -893,7 +1020,11 @@ void promedioEspecialidad(){
     printf("Promedio de citas de la especialidad es: %d \n", promedio);
 }
 
-/*Función que imprime el menu de estadisticas*/
+/*
+ * Función que imprime el menu de estadisticas
+ * Entradas: no tiene entradas
+ * Salidas: no tiene salidas
+ */
 void imprimirMenuEstadisticas(){
     int opcion;
     printf("###############################################################\n");
@@ -905,6 +1036,7 @@ void imprimirMenuEstadisticas(){
     scanf("%d", &opcion);
     printf("###############################################################\n");
   
+    //verifica la estadistica que solicita segun los datos de consola
     switch(opcion){
         case 1:
             promedioDoctores();
@@ -920,12 +1052,16 @@ void imprimirMenuEstadisticas(){
 /******************************************************************************/
 /*FUNCION PARA EL MAIN*/
 
-/*Función que imprime el menú principal de la aplicación*/
+/*
+ * Función que imprime el menú principal de la aplicación
+ * Entradas: no tiene entradas
+ * Salidas: no tiene salidas
+ */
 void imprimirMenu(){
     bool bandera = true;
     int opcionSeleccionada;
     
-    while(bandera == true){
+    while(bandera == true){ //no se sale del ciclo hasta que el usuario lo desee
         printf("###############################################################\n");
         printf("Bienvenido... Seleccione alguna de las siguientes opciones: \n");
         printf("1.Cargar datos\n");
@@ -966,13 +1102,14 @@ void imprimirMenu(){
                 guardarDatosDoctores(cabezaDoctor);
                 guardarDatosPaciente(cabezaPaciente);
                 guardarCitas(cabezaCita);
-                
+                //termina el ciclo
                 bandera = false;
                 break;
         }
     }
 }
 
+//funcion main para ejecutar el codigo
 int main(int argc, char** argv) {
     imprimirMenu();
     return (EXIT_SUCCESS);
