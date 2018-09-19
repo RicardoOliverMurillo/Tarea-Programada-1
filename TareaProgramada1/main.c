@@ -594,42 +594,52 @@ int largoPacientes(Paciente* cabeza){
 
 /*
  * Funcion para buscar al doctor en el sistema
- * Entradas: la cabeza de la lista doctor, el nombre del doctor, un entero para
- * verificar si se desea aumentar la cantidad de citas
- * Salidas: true (si el doctor es encontrado) y false (si el doctor no existe) 
+ * Entradas: el nombre del doctor, un entero para verificar si se desea aumentar 
+ * la cantidad de citas
+ * Salidas: una estructura Doctor 
  */
-bool estaDoctor(char* nombreDoctor, int verificar){
+Doctor* estaDoctor(char* nombreDoctor, int verificar){
     Doctor* temp = cabezaDoctor;
+    Doctor* nuevo = NULL;
         while (temp != NULL){
         if (strcmp(temp->nombre, nombreDoctor)==0){
             if(verificar ==0){
                int num = (int)temp->cantCitas[0]-47;
                 char c = '0'+num;
                 temp->cantCitas[0]= c;
-                return true;
+                nuevo = temp;
+                return nuevo;
             }
             else{
-                return true;
+                nuevo = temp;
+                return nuevo;
             } 
         }
-        temp=temp->sig;
+        else{
+            temp=temp->sig;
+        }
     }
-    return false;
+    return nuevo;
 }
 
 /*
  * Funcion para buscar al paciente en el sistema
- * Entradas: la cabeza de la lista pacientes, el nombre del paciente
- * Salidas: true (si el paciente es encontrado) y false (si el paciente no existe) 
+ * Entradas: el nombre del paciente
+ * Salidas: una estructura Paciente 
  */
-bool estaPaciente(Paciente* tempPaciente, char* nombrePaciente){
-    while (tempPaciente != NULL){
-        if (strcmp(tempPaciente->nombre, nombrePaciente)==0){
-            return true;
+Paciente* estaPaciente(char* nombrePaciente){
+    Paciente* temp = cabezaPaciente;
+    Paciente* nuevo = NULL;
+    while (temp != NULL){
+        if (strcmp(temp->nombre, nombrePaciente)==0){
+            nuevo = temp;
+            return nuevo;
         }
-        tempPaciente=tempPaciente->sig;
+        else{
+            temp=temp->sig;
+        }
     }
-    return false;
+    return nuevo;
 }
 
 /*
@@ -674,29 +684,32 @@ bool horarioRepetidoDoctor(char fecha[], char id_medico[], char hora[]){
 
 /*
  * Funcion que valida que las horas de las citas sean compatibles con el horario del doctor
- * Entradas: un arreglo char con el turno y un arreglo char con la hora
+ * Entradas: un entero con el turno y un arreglo char con la hora
  * Salida: true (si el horario es compatible) y false (si el horario no es compatible)
  */
-bool validarTurno(char turno[], char hora[]){
+bool validarTurno(int turno, char hora[]){
     int numero;
-    int opcion;
     numero = atoi(hora);
-    opcion = atoi(turno);
-    switch(opcion){
+    switch(turno){
         case 1:
             if((numero>=8) && (numero<=12)){
                 return true;
+            }else{
+                return false;
             }
         case 2:
             if((numero>=14) && (numero<=19)){
                 return true;
+            }else{
+                return false;
             }
         case 3:
             if(((numero>=9) && (numero<=12)) || ((numero>=14) && (numero<=17))){
                 return true;
+            }else{
+                return false;
             }
     }
-    return false;
 }
 
 /*
@@ -716,28 +729,30 @@ void generarCita(){
     //verifica que el paciente este en el sistema, en caso de no estarlo debe crear al usuario
     printf("Inserte el nombre del paciente: ");
     scanf("%s", &nombrePaciente);
-    
-    if (estaPaciente(cabezaPaciente, nombrePaciente)==false){
+    Paciente* tempPaciente = estaPaciente(nombrePaciente);
+    if (tempPaciente == NULL){
         printf("Paciente no registrado, ingrese su información personal...\n");
         agregarPaciente();
+        Paciente* tempPaciente = estaPaciente(nombrePaciente);
+        strcpy(id_paciente, tempPaciente->id_paciente);
+
     }else{
-        strcpy(id_paciente, cabezaPaciente->id_paciente);
-        printf("ID DEL PACIENTE %s\n",cabezaPaciente->id_paciente);
+        Paciente* tempPaciente = estaPaciente(nombrePaciente);
+        strcpy(id_paciente, tempPaciente->id_paciente);
+
     }
     //Verifica que el doctor se encuentre en el sistema, en caso de no estarlo lo crea
     printf("Inserte el nombre del doctor: ");
     scanf("%s", &doctorSolicitado);
+    Doctor* temp = estaDoctor(doctorSolicitado,1);
     
-    if (estaDoctor(cabezaDoctor, doctorSolicitado,1)==false){
+    if (temp == NULL){
         printf("El doctor no se encuentra registrado\n");
     }else{
+        Doctor* tempDoctor = estaDoctor(doctorSolicitado,0);
+        strcpy(id_doctor, tempDoctor->id_medico);
+        agregarEspecialidad(tempDoctor->especialidad); //agrega la especialidad a la lista
         
-        if (estaDoctor(cabezaDoctor, doctorSolicitado,0)==true){
-            printf("ID DEL MEDICO %s\n",cabezaDoctor->id_medico);
-            
-            strcpy(id_doctor, cabezaDoctor->id_medico);
-            agregarEspecialidad(cabezaDoctor->especialidad); //agrega la especialidad a la lista
-        }
         printf("Inserte la fecha (dd-mm-aaaa): ");
         scanf("%s", &fecha);
         while(compararFecha(fecha)==false){ //verifica el formato de la fecha
@@ -755,27 +770,42 @@ void generarCita(){
         }
         
         //verifica que el paciente no tenga una cita previa en el horario que ingresa
-        if(horarioRepetidoPaciente(fecha, cabezaPaciente->id_paciente, hora)== true){
+        while(horarioRepetidoPaciente(fecha, id_paciente, hora)== true){
             printf("El paciente tiene una cita previamente registrada a esa hora en esa fecha...\n"
                     "Ingrese un nuevo horario.\n");
             printf("Inserte la fecha (dd-mm-aaaa): ");
             scanf("%s", &fecha);
             printf("Inserte la hora: ");
             scanf("%s", &hora);
+            horarioRepetidoPaciente(fecha, id_paciente, hora);
         }
         //verifica que le doctor no tenga una cita previa en el horario que ingresa
-        if(horarioRepetidoDoctor(fecha, cabezaDoctor->id_medico, hora)== true){
+        while(horarioRepetidoDoctor(fecha, id_doctor, hora)== true){
             printf("El doctor tiene una cita previamente registrada a esa hora en esa fecha...\n"
                     "Ingrese un nuevo horario.\n");
             printf("Inserte la fecha (dd-mm-aaaa): ");
             scanf("%s", &fecha);
             printf("Inserte la hora: ");
             scanf("%s", &hora);
+            horarioRepetidoDoctor(fecha, id_doctor, hora);
         }
+        
         //valida que la hora que se ingresa corresponda al horario del doctor
-        if(validarTurno(cabezaDoctor->turno, hora)==false){
-            printf("El horario del doctor no es compatible con la hora\nIngrese otro horario: ");
-            scanf("%s", &hora);
+        int turno = atoi(tempDoctor->turno);
+
+        while(validarTurno(turno, hora)==false){
+            if(turno == 1){
+               printf("El horario del doctor no es compatible con la hora\nIngrese otro horario entre 08 y 12: ");
+                scanf("%s", &hora); 
+            }else if(turno == 2){
+                printf("El horario del doctor no es compatible con la hora\nIngrese otro horario entre 14 y 19: ");
+                scanf("%s", &hora);
+            }else{
+                printf("El horario del doctor no es compatible con la hora\nIngrese otro horario entre 09 y 12 o 14 y 17: ");
+                scanf("%s", &hora);
+            }
+            validarTurno(turno, hora);
+            
         }
         
         //crea la estructura cita para almacenar la informacion en el sistema de citas
@@ -783,8 +813,8 @@ void generarCita(){
         
         strcpy(nuevaCita->fechaCita, fecha);
         strcpy(nuevaCita->horaCita, hora);
-        strcpy(nuevaCita->id_medico, cabezaDoctor->id_medico);
-        strcpy(nuevaCita->id_paciente, cabezaPaciente->id_paciente);
+        strcpy(nuevaCita->id_medico, id_doctor);
+        strcpy(nuevaCita->id_paciente, id_paciente);
         
         if(cabezaCita == NULL){
             cabezaCita = nuevaCita;
